@@ -1,95 +1,119 @@
-'use client';
-
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import Navbar from './components/Navbar';
+import HomeSearchBar from './components/HomeSearchBar';
+import { supabase } from '@/lib/supabase';
 
 const categories = [
-  { name: 'Starters', icon: '🌱', description: 'Choose your starter Pokémon and begin your journey.' },
-  { name: 'Moves', icon: '⚡', description: 'Browse all moves, their power, accuracy, and effects.' },
-  { name: 'Items', icon: '🎒', description: 'Find every item, berry, and held item in the game.' },
-  { name: 'Farming', icon: '💰', description: 'Guides for grinding money, items, and experience.' },
-  { name: 'Guides', icon: '📖', description: 'In-depth walkthroughs for every region and mechanic.' },
-  { name: 'PvP', icon: '⚔️', description: 'Competitive builds, tier lists, and battle strategies.' },
+  { name: 'Pokémon',  icon: '⚡', gradient: 'from-yellow-950/60 to-gray-900', glow: 'bg-yellow-500/10', accent: 'text-yellow-400', href: '/wiki?category=pokemon'  },
+  { name: 'Items',    icon: '🎒', gradient: 'from-blue-950/60   to-gray-900', glow: 'bg-blue-500/10',   accent: 'text-blue-400',   href: '/wiki?category=items'   },
+  { name: 'Farming',  icon: '💰', gradient: 'from-amber-950/60  to-gray-900', glow: 'bg-amber-500/10',  accent: 'text-amber-400',  href: '/wiki?category=farming' },
+  { name: 'Guides',   icon: '📖', gradient: 'from-purple-950/60 to-gray-900', glow: 'bg-purple-500/10', accent: 'text-purple-400', href: '/wiki?category=guides'  },
+  { name: 'PvP',      icon: '⚔️', gradient: 'from-orange-950/60 to-gray-900', glow: 'bg-orange-500/10', accent: 'text-orange-400', href: '/wiki?category=pvp'     },
+  { name: 'Regions',  icon: '🗺️', gradient: 'from-green-950/60  to-gray-900', glow: 'bg-green-500/10',  accent: 'text-green-400',  href: '/wiki/regions'          },
 ];
 
-const navLinks = [
-  { label: 'Home', href: '/' },
-  { label: 'Wiki', href: '/wiki' },
-  { label: 'Guides', href: '/guides' },
-  { label: 'Community', href: '/community' },
-];
-
-export default function Home() {
-  const router = useRouter();
-  const [query, setQuery] = useState('');
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = query.trim();
-    if (trimmed) router.push(`/wiki?search=${encodeURIComponent(trimmed)}`);
-  }
+export default async function Home() {
+  const { data: recentPages } = await supabase
+    .from('pages')
+    .select('title, slug, updated_at')
+    .order('updated_at', { ascending: false })
+    .limit(5);
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      {/* Navigation */}
-      <nav className="border-b border-gray-800 bg-gray-900">
-        <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="text-lg font-bold text-red-400">PokéMMO Wiki</Link>
-          <div className="flex gap-8 text-sm text-gray-300">
-            {navLinks.map(({ label, href }) => (
-              <Link key={label} href={href} className="hover:text-white transition-colors">
-                {label}
-              </Link>
+      <Navbar />
+
+      {/* Hero */}
+      <div className="relative overflow-hidden border-b border-gray-800">
+        {/* Grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              'linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
+        {/* Radial glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(239,68,68,0.08),transparent)]" />
+
+        <div className="relative mx-auto max-w-3xl px-6 py-20 text-center">
+          <h1 className="text-5xl font-extrabold tracking-tight mb-3">
+            PokéMMO <span className="text-red-400">Wiki</span>
+          </h1>
+          <p className="text-gray-400 text-lg mb-8">
+            The community-driven knowledge base for everything PokéMMO.
+          </p>
+          <HomeSearchBar />
+
+          {/* Stats */}
+          <div className="flex items-center justify-center gap-6 text-sm mt-8">
+            {[
+              { value: '2,900+', label: 'pages'   },
+              { value: 'Community', label: 'driven'  },
+              { value: 'Always',    label: 'updated' },
+            ].map(({ value, label }) => (
+              <div key={label} className="flex items-center gap-1.5">
+                <span className="font-semibold text-white">{value}</span>
+                <span className="text-gray-500">{label}</span>
+              </div>
             ))}
           </div>
         </div>
-      </nav>
-
-      {/* Hero */}
-      <div className="mx-auto max-w-6xl px-6 py-24 flex flex-col items-center text-center">
-        <h1 className="text-5xl font-extrabold tracking-tight mb-4">PokéMMO Wiki</h1>
-        <p className="text-gray-400 text-lg mb-10">
-          Your community-driven guide to everything PokéMMO.
-        </p>
-
-        {/* Search */}
-        <form onSubmit={handleSearch} className="w-full max-w-xl flex gap-2">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search Pokémon, moves, items..."
-            className="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-red-400 transition-colors"
-          />
-          <button
-            type="submit"
-            className="rounded-lg bg-red-500 hover:bg-red-600 px-5 py-3 font-semibold transition-colors"
-          >
-            Search
-          </button>
-        </form>
       </div>
 
-      {/* Categories */}
-      <div className="mx-auto max-w-6xl px-6 pb-24">
-        <h2 className="text-xl font-semibold text-gray-300 mb-6">Browse Categories</h2>
+      {/* Category grid */}
+      <div className="mx-auto max-w-6xl px-6 py-12">
+        <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-5">
+          Browse Categories
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {categories.map((cat) => (
             <Link
               key={cat.name}
-              href={`/wiki?category=${cat.name.toLowerCase()}`}
-              className="group rounded-xl bg-gray-900 border border-gray-800 p-6 hover:border-red-500 hover:bg-gray-800 transition-all"
+              href={cat.href}
+              className={`group rounded-2xl bg-gradient-to-b ${cat.gradient} border border-gray-800 p-6 flex items-center gap-4 hover:border-gray-600 transition-all`}
             >
-              <div className="text-3xl mb-3">{cat.icon}</div>
-              <h3 className="text-lg font-semibold mb-1 group-hover:text-red-400 transition-colors">
-                {cat.name}
-              </h3>
-              <p className="text-sm text-gray-400">{cat.description}</p>
+              <div className={`w-12 h-12 rounded-xl ${cat.glow} flex items-center justify-center text-2xl shrink-0`}>
+                {cat.icon}
+              </div>
+              <div>
+                <h3 className={`text-base font-bold ${cat.accent}`}>{cat.name}</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Browse {cat.name.toLowerCase()} pages →</p>
+              </div>
             </Link>
           ))}
         </div>
       </div>
+
+      {/* Recently updated strip */}
+      {recentPages && recentPages.length > 0 && (
+        <div className="border-t border-gray-800 bg-gray-900/40">
+          <div className="mx-auto max-w-6xl px-6 py-8">
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-5">
+              Recently Updated
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {recentPages.map((p) => (
+                <Link
+                  key={p.slug}
+                  href={`/wiki/${p.slug}`}
+                  className="group rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-600 px-4 py-3 transition-all"
+                >
+                  <p className="text-sm font-medium text-gray-300 group-hover:text-white capitalize truncate mb-1 transition-colors">
+                    {p.title}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {new Date(p.updated_at).toLocaleDateString('en-US', {
+                      month: 'short', day: 'numeric',
+                    })}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

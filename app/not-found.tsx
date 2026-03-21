@@ -1,26 +1,10 @@
 import Link from 'next/link';
+import Navbar from './components/Navbar';
 
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col">
-      {/* Nav */}
-      <nav className="border-b border-gray-800 bg-gray-900">
-        <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="text-lg font-bold text-red-400">PokéMMO Wiki</Link>
-          <div className="flex gap-8 text-sm text-gray-300">
-            {[
-              { label: 'Home', href: '/' },
-              { label: 'Wiki', href: '/wiki' },
-              { label: 'Guides', href: '/guides' },
-              { label: 'Community', href: '/community' },
-            ].map(({ label, href }) => (
-              <Link key={label} href={href} className="hover:text-white transition-colors">
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* 404 body */}
       <div className="flex flex-1 flex-col items-center justify-center text-center px-6">
