@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import DeleteButton from './DeleteButton';
+import Breadcrumb from '@/app/components/Breadcrumb';
 
 async function logoutAction() {
   'use server';
@@ -69,6 +70,10 @@ export default async function AdminDashboard({
       </header>
 
       <div className="mx-auto max-w-6xl px-6 py-10">
+        <Breadcrumb crumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'Admin' },
+        ]} />
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-extrabold">Wiki Pages</h1>
           <span className="text-sm text-gray-500">{pages?.length ?? 0} pages</span>

@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import DeleteButton from '../DeleteButton';
+import Breadcrumb from '@/app/components/Breadcrumb';
 
 async function createCategoryAction(formData: FormData) {
   'use server';
@@ -62,6 +63,11 @@ export default async function AdminCategoriesPage() {
       </header>
 
       <div className="mx-auto max-w-5xl px-6 py-10">
+        <Breadcrumb crumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'Admin', href: '/admin' },
+          { label: 'Categories' },
+        ]} />
         <h1 className="text-3xl font-extrabold mb-8">Categories</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">

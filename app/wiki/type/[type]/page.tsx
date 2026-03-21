@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Navbar from '@/app/components/Navbar';
+import Breadcrumb from '@/app/components/Breadcrumb';
 import TypeBadge from '@/app/components/TypeBadge';
 import CategoryBadge from '@/app/components/CategoryBadge';
 import { ALL_TYPES, TYPE_COLORS, calcOffensive, calcDefensive } from '@/lib/type-chart';
@@ -113,16 +114,12 @@ export default async function TypePage({
       <Navbar />
 
       <div className="mx-auto max-w-5xl px-6 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-gray-300 transition-colors">Home</Link>
-          <span>/</span>
-          <Link href="/wiki" className="hover:text-gray-300 transition-colors">Wiki</Link>
-          <span>/</span>
-          <span className="text-gray-300">Types</span>
-          <span>/</span>
-          <span className="text-gray-300">{displayName}</span>
-        </nav>
+        <Breadcrumb crumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'Wiki', href: '/wiki' },
+          { label: 'Types', href: '/wiki?category=types' },
+          { label: displayName },
+        ]} />
 
         {/* Hero */}
         <div className="flex items-center gap-4 mb-10">

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import Navbar from '@/app/components/Navbar';
+import Breadcrumb from '@/app/components/Breadcrumb';
 import Link from 'next/link';
 
 export default async function UpdatesPage() {
@@ -15,12 +16,10 @@ export default async function UpdatesPage() {
     <div className="min-h-screen bg-gray-950 text-white">
       <Navbar />
       <div className="mx-auto max-w-4xl px-6 py-12">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs text-gray-600 mb-8">
-          <Link href="/" className="hover:text-gray-400 transition-colors">Home</Link>
-          <span>/</span>
-          <span className="text-gray-500">PokéMMO Updates</span>
-        </nav>
+        <Breadcrumb crumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'Updates' },
+        ]} />
 
         <h1 className="text-3xl font-extrabold mb-2">PokéMMO Updates</h1>
         <p className="text-gray-400 text-sm mb-8">Changelogs and update notes for PokéMMO.</p>

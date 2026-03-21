@@ -4,6 +4,7 @@ import Link from 'next/link';
 import MarkdownContent from './MarkdownContent';
 import PokemonTemplate from './PokemonTemplate';
 import Navbar from '@/app/components/Navbar';
+import Breadcrumb from '@/app/components/Breadcrumb';
 
 export default async function WikiPage({
   params,
@@ -31,14 +32,11 @@ export default async function WikiPage({
       <Navbar />
 
       <div className="mx-auto max-w-7xl px-6 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-gray-300 transition-colors">Home</Link>
-          <span>/</span>
-          <Link href="/wiki" className="hover:text-gray-300 transition-colors">Wiki</Link>
-          <span>/</span>
-          <span className="text-gray-300 capitalize">{page.title}</span>
-        </nav>
+        <Breadcrumb crumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'Wiki', href: '/wiki' },
+          { label: page.title },
+        ]} />
 
         {isPokemon ? (
           // ── Pokémon template ──────────────────────────────────────────────

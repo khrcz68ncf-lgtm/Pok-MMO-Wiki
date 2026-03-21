@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Navbar from '@/app/components/Navbar';
+import Breadcrumb from '@/app/components/Breadcrumb';
 
 type PvPCard = {
   title: string;
@@ -51,12 +52,10 @@ export default function PvPPage() {
     <div className="min-h-screen bg-gray-950 text-white">
       <Navbar />
       <div className="mx-auto max-w-6xl px-6 py-12">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs text-gray-600 mb-8">
-          <Link href="/" className="hover:text-gray-400 transition-colors">Home</Link>
-          <span>/</span>
-          <span className="text-gray-500">PvP</span>
-        </nav>
+        <Breadcrumb crumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'PvP' },
+        ]} />
 
         <h1 className="text-3xl font-extrabold mb-2">PvP Hub</h1>
         <p className="text-gray-400 text-sm mb-10">Everything you need to compete in PokéMMO PvP.</p>

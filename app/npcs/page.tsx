@@ -1,4 +1,5 @@
 import Navbar from '@/app/components/Navbar';
+import Breadcrumb from '@/app/components/Breadcrumb';
 import Link from 'next/link';
 
 export default function NPCsPage() {
@@ -6,6 +7,10 @@ export default function NPCsPage() {
     <div className="min-h-screen bg-gray-950 text-white">
       <Navbar />
       <div className="mx-auto max-w-4xl px-6 py-20 text-center">
+        <Breadcrumb crumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'NPCs' },
+        ]} />
         <div className="text-6xl mb-6">👤</div>
         <h1 className="text-3xl font-extrabold mb-3">NPCs</h1>
         <p className="text-gray-400 mb-8">NPC trainers, their teams and locations. Coming soon.</p>

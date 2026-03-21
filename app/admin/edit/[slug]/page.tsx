@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import EditPageClient from './EditPageClient';
+import Breadcrumb from '@/app/components/Breadcrumb';
 
 async function savePageAction(formData: FormData) {
   'use server';
@@ -119,6 +120,12 @@ export default async function EditPage({
       </header>
 
       <div className="mx-auto max-w-7xl px-6 py-8">
+        <Breadcrumb crumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'Admin', href: '/admin' },
+          { label: 'Edit', href: '/admin' },
+          { label: slug },
+        ]} />
         {saved && (
           <div className="mb-6 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm px-4 py-3">
             Page saved successfully.
