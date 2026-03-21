@@ -3,13 +3,19 @@ import Navbar from './components/Navbar';
 import HomeSearchBar from './components/HomeSearchBar';
 import { supabase } from '@/lib/supabase';
 
-const categories = [
-  { name: 'Pokémon',  icon: '⚡', gradient: 'from-yellow-950/60 to-gray-900', glow: 'bg-yellow-500/10', accent: 'text-yellow-400', href: '/wiki?category=pokemon'  },
-  { name: 'Items',    icon: '🎒', gradient: 'from-blue-950/60   to-gray-900', glow: 'bg-blue-500/10',   accent: 'text-blue-400',   href: '/wiki?category=items'   },
-  { name: 'Farming',  icon: '💰', gradient: 'from-amber-950/60  to-gray-900', glow: 'bg-amber-500/10',  accent: 'text-amber-400',  href: '/wiki?category=farming' },
-  { name: 'Guides',   icon: '📖', gradient: 'from-purple-950/60 to-gray-900', glow: 'bg-purple-500/10', accent: 'text-purple-400', href: '/wiki?category=guides'  },
-  { name: 'PvP',      icon: '⚔️', gradient: 'from-orange-950/60 to-gray-900', glow: 'bg-orange-500/10', accent: 'text-orange-400', href: '/wiki?category=pvp'     },
-  { name: 'Regions',  icon: '🗺️', gradient: 'from-green-950/60  to-gray-900', glow: 'bg-green-500/10',  accent: 'text-green-400',  href: '/wiki/regions'          },
+const row1 = [
+  { name: 'Pokémon',         icon: '⚡', href: '/pokedex',             gradient: 'from-yellow-950/60 to-gray-900', glow: 'bg-yellow-500/10', accent: 'text-yellow-400' },
+  { name: 'Regions',         icon: '🗺️', href: '/regions',             gradient: 'from-green-950/60 to-gray-900',  glow: 'bg-green-500/10',  accent: 'text-green-400'  },
+  { name: 'Guides',          icon: '📖', href: '/guides',              gradient: 'from-purple-950/60 to-gray-900', glow: 'bg-purple-500/10', accent: 'text-purple-400' },
+  { name: 'Money Making',    icon: '💰', href: '/guides/money-making', gradient: 'from-amber-950/60 to-gray-900',  glow: 'bg-amber-500/10',  accent: 'text-amber-400'  },
+  { name: 'PvP',             icon: '⚔️', href: '/pvp',                 gradient: 'from-orange-950/60 to-gray-900', glow: 'bg-orange-500/10', accent: 'text-orange-400' },
+  { name: 'PokéMMO Updates', icon: '📢', href: '/updates',             gradient: 'from-blue-950/60 to-gray-900',   glow: 'bg-blue-500/10',   accent: 'text-blue-400'   },
+];
+
+const row2 = [
+  { name: 'Team Builder', icon: '🗂️', href: '/team-builder', desc: 'Build and share your PokéMMO teams',      gradient: 'from-cyan-950/60 to-gray-900',   glow: 'bg-cyan-500/10',   accent: 'text-cyan-400'   },
+  { name: 'Swarms',       icon: '🔥', href: '/swarms',        desc: 'Daily swarm locations and Pokémon',       gradient: 'from-red-950/60 to-gray-900',    glow: 'bg-red-500/10',    accent: 'text-red-400'    },
+  { name: 'NPCs',         icon: '👤', href: '/npcs',          desc: 'NPC trainers, their teams and locations', gradient: 'from-violet-950/60 to-gray-900', glow: 'bg-violet-500/10', accent: 'text-violet-400' },
 ];
 
 export default async function Home() {
@@ -67,8 +73,26 @@ export default async function Home() {
         <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-5">
           Browse Categories
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories.map((cat) => (
+
+        {/* Row 1 — 6 cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {row1.map((cat) => (
+            <Link
+              key={cat.name}
+              href={cat.href}
+              className={`group rounded-2xl bg-gradient-to-b ${cat.gradient} border border-gray-800 p-4 flex flex-col items-center gap-3 hover:border-gray-600 transition-all text-center`}
+            >
+              <div className={`w-10 h-10 rounded-xl ${cat.glow} flex items-center justify-center text-xl shrink-0`}>
+                {cat.icon}
+              </div>
+              <h3 className={`text-sm font-bold ${cat.accent} leading-tight`}>{cat.name}</h3>
+            </Link>
+          ))}
+        </div>
+
+        {/* Row 2 — 3 cards, centered */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto mt-4">
+          {row2.map((cat) => (
             <Link
               key={cat.name}
               href={cat.href}
@@ -79,7 +103,7 @@ export default async function Home() {
               </div>
               <div>
                 <h3 className={`text-base font-bold ${cat.accent}`}>{cat.name}</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Browse {cat.name.toLowerCase()} pages →</p>
+                <p className="text-xs text-gray-500 mt-0.5">{cat.desc}</p>
               </div>
             </Link>
           ))}

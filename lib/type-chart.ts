@@ -32,7 +32,7 @@ export interface TypeEffectiveness {
   quadruple: TypeName[]; // 4x
 }
 
-const ALL_TYPES: TypeName[] = [
+export const ALL_TYPES: TypeName[] = [
   'normal','fire','water','electric','grass','ice','fighting','poison',
   'ground','flying','psychic','bug','rock','ghost','dragon','dark','steel','fairy',
 ];
@@ -53,6 +53,35 @@ export function calcEffectiveness(defTypes: TypeName[]): TypeEffectiveness {
   }
 
   return result;
+}
+
+/** Offensive chart: when attacking WITH atkType, what multiplier does each defending type receive? */
+export function calcOffensive(atkType: TypeName): { superEffective: TypeName[]; notVery: TypeName[]; immune: TypeName[] } {
+  const row = EFF[atkType] ?? {};
+  const superEffective: TypeName[] = [];
+  const notVery: TypeName[] = [];
+  const immune: TypeName[] = [];
+  for (const def of ALL_TYPES) {
+    const m = row[def] ?? 1;
+    if (m === 0)   immune.push(def);
+    else if (m === 0.5) notVery.push(def);
+    else if (m === 2)   superEffective.push(def);
+  }
+  return { superEffective, notVery, immune };
+}
+
+/** Defensive chart: when defending AS defType (single type), what attacking types are effective/resisted/immune? */
+export function calcDefensive(defType: TypeName): { weakTo: TypeName[]; resists: TypeName[]; immuneTo: TypeName[] } {
+  const weakTo: TypeName[] = [];
+  const resists: TypeName[] = [];
+  const immuneTo: TypeName[] = [];
+  for (const atk of ALL_TYPES) {
+    const m = EFF[atk]?.[defType] ?? 1;
+    if (m === 0)   immuneTo.push(atk);
+    else if (m === 0.5) resists.push(atk);
+    else if (m === 2)   weakTo.push(atk);
+  }
+  return { weakTo, resists, immuneTo };
 }
 
 export const TYPE_COLORS: Record<string, string> = {
