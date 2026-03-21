@@ -127,7 +127,7 @@ export default function Navbar() {
                 <div className="w-7 h-7 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center text-xs font-bold text-red-400 select-none">
                   {initials}
                 </div>
-                <span className="text-sm text-gray-300 hidden sm:block">{profile.username}</span>
+                <span className="text-sm text-gray-300 hidden sm:block">{profile?.username}</span>
                 <svg
                   className={`w-3 h-3 text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
                   fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
@@ -149,7 +149,7 @@ export default function Navbar() {
               >
                 <div className="px-4 py-3 border-b border-gray-800">
                   <p className="text-xs text-gray-500">Signed in as</p>
-                  <p className="text-sm font-semibold text-white truncate">{profile.username}</p>
+                  <p className="text-sm font-semibold text-white truncate">{profile?.username}</p>
                 </div>
 
                 <div className="py-1">
