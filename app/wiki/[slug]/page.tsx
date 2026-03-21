@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import MarkdownContent from './MarkdownContent';
 import PokemonTemplate from './PokemonTemplate';
+import MoveTemplate from './MoveTemplate';
 import Navbar from '@/app/components/Navbar';
 import Breadcrumb from '@/app/components/Breadcrumb';
 
@@ -26,6 +27,40 @@ export default async function WikiPage({
   });
 
   const isPokemon = page.template_type === 'pokemon';
+  const isMove    = page.template_type === 'move';
+
+  // Enrich Pokémon moves with type/damage_class from move pages
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let pageData: any = page;
+  if (isPokemon && Array.isArray(page.metadata?.moves) && page.metadata.moves.length > 0) {
+    const moveSlugs = [
+      ...new Set<string>(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        page.metadata.moves.map((m: any) => m.name.toLowerCase().replace(/\s+/g, '-'))
+      ),
+    ];
+
+    const { data: movePages } = await supabase
+      .from('pages')
+      .select('slug, metadata')
+      .in('slug', moveSlugs)
+      .eq('template_type', 'move');
+
+    const moveTypes: Record<string, { type?: string; damage_class?: string }> = {};
+    for (const mp of movePages ?? []) {
+      moveTypes[mp.slug] = {
+        type:         mp.metadata?.type     ?? undefined,
+        damage_class: mp.metadata?.category ?? undefined,
+      };
+    }
+
+    const enrichedMoves = page.metadata.moves.map((m: { name: string }) => {
+      const moveSlug = m.name.toLowerCase().replace(/\s+/g, '-');
+      return { ...m, ...moveTypes[moveSlug] };
+    });
+
+    pageData = { ...page, metadata: { ...page.metadata, moves: enrichedMoves } };
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -40,7 +75,10 @@ export default async function WikiPage({
 
         {isPokemon ? (
           // ── Pokémon template ──────────────────────────────────────────────
-          <PokemonTemplate page={page as any} />
+          <PokemonTemplate page={pageData} />
+        ) : isMove ? (
+          // ── Move template ─────────────────────────────────────────────────
+          <MoveTemplate page={pageData} slug={slug} />
         ) : (
           // ── Free markdown template ────────────────────────────────────────
           <div className="flex gap-10">

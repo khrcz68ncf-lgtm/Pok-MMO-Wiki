@@ -1,7 +1,7 @@
 // Standard Gen 6+ type effectiveness chart.
 // chart[attacking][defending] = multiplier
 
-const EFF: Record<string, Record<string, number>> = {
+export const EFF: Record<string, Record<string, number>> = {
   normal:   { rock: 0.5, ghost: 0, steel: 0.5 },
   fire:     { fire: 0.5, water: 0.5, grass: 2, ice: 2, bug: 2, rock: 0.5, dragon: 0.5, steel: 2 },
   water:    { fire: 2, water: 0.5, grass: 0.5, ground: 2, rock: 2, dragon: 0.5 },
