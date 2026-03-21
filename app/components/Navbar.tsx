@@ -25,28 +25,27 @@ const menuItems = [
 
 export default function Navbar() {
   const router = useRouter();
+  const [user, setUser]       = useState<{ id: string } | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen]       = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Load session on mount
+    // Resolve auth state immediately — never wait for profile fetch
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
+      setUser(session?.user ?? null);
+      setLoading(false);
+      if (session?.user) fetchProfile(session.user.id);
     });
 
-    // Keep in sync with auth changes (login / logout from other tabs)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
       if (session?.user) {
         fetchProfile(session.user.id);
       } else {
         setProfile(null);
-        setLoading(false);
       }
     });
 
@@ -60,7 +59,6 @@ export default function Navbar() {
       .eq('id', userId)
       .single();
     setProfile(data);
-    setLoading(false);
   }
 
   // Close dropdown on outside click
@@ -86,9 +84,10 @@ export default function Navbar() {
   async function handleLogout() {
     setOpen(false);
     await supabase.auth.signOut();
+    setUser(null);
     setProfile(null);
-    router.push('/');
     router.refresh();
+    router.push('/');
   }
 
   const initials = profile?.username?.slice(0, 2).toUpperCase() ?? '';
@@ -114,9 +113,9 @@ export default function Navbar() {
         {/* Auth area */}
         <div className="flex items-center gap-3 text-sm shrink-0">
           {loading ? (
-            /* Skeleton to prevent layout shift */
+            /* Skeleton prevents layout shift while resolving session */
             <div className="w-7 h-7 rounded-full bg-gray-800 animate-pulse" />
-          ) : profile ? (
+          ) : user ? (
             /* Logged-in: avatar + dropdown */
             <div ref={dropdownRef} className="relative">
               <button
