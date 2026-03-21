@@ -3,6 +3,13 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import MarkdownContent from './MarkdownContent';
 
+const navLinks = [
+  { label: 'Home', href: '/' },
+  { label: 'Wiki', href: '/wiki' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'Community', href: '/community' },
+];
+
 export default async function WikiPage({
   params,
 }: {
@@ -31,15 +38,11 @@ export default async function WikiPage({
       {/* Nav */}
       <nav className="border-b border-gray-800 bg-gray-900">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
-          <span className="text-lg font-bold text-red-400">PokéMMO Wiki</span>
+          <Link href="/" className="text-lg font-bold text-red-400">PokéMMO Wiki</Link>
           <div className="flex gap-8 text-sm text-gray-300">
-            {['Home', 'Wiki', 'Guides', 'Community'].map((item) => (
-              <Link
-                key={item}
-                href={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
-                className="hover:text-white transition-colors"
-              >
-                {item}
+            {navLinks.map(({ label, href }) => (
+              <Link key={label} href={href} className="hover:text-white transition-colors">
+                {label}
               </Link>
             ))}
           </div>
@@ -94,7 +97,12 @@ export default async function WikiPage({
               {page.category && (
                 <div className="mt-4 text-sm text-gray-400">
                   <p className="text-gray-500 text-xs mb-1">Category</p>
-                  <p className="text-gray-200 font-medium">{page.category}</p>
+                  <Link
+                    href={`/wiki?category=${page.category.toLowerCase()}`}
+                    className="text-gray-200 font-medium hover:text-red-400 transition-colors"
+                  >
+                    {page.category}
+                  </Link>
                 </div>
               )}
             </div>

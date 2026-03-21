@@ -10,26 +10,53 @@ const categoryColors: Record<string, string> = {
   PvP: 'bg-red-500/20 text-red-400 border-red-500/40',
 };
 
-export default async function WikiIndex() {
-  const { data: pages } = await supabase
+const navLinks = [
+  { label: 'Home', href: '/' },
+  { label: 'Wiki', href: '/wiki' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'Community', href: '/community' },
+];
+
+export default async function WikiIndex({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const { category, search } = await searchParams;
+
+  const categoryFilter = typeof category === 'string' ? category : undefined;
+  const searchFilter = typeof search === 'string' ? search : undefined;
+
+  let query = supabase
     .from('pages')
     .select('title, category, slug')
     .order('title', { ascending: true });
+
+  if (categoryFilter) {
+    query = query.ilike('category', categoryFilter);
+  }
+  if (searchFilter) {
+    query = query.ilike('title', `%${searchFilter}%`);
+  }
+
+  const { data: pages } = await query;
+
+  const activeFilter = categoryFilter
+    ? `Category: ${categoryFilter}`
+    : searchFilter
+    ? `Search: "${searchFilter}"`
+    : null;
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Nav */}
       <nav className="border-b border-gray-800 bg-gray-900">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
-          <span className="text-lg font-bold text-red-400">PokéMMO Wiki</span>
+          <Link href="/" className="text-lg font-bold text-red-400">PokéMMO Wiki</Link>
           <div className="flex gap-8 text-sm text-gray-300">
-            {['Home', 'Wiki', 'Guides', 'Community'].map((item) => (
-              <Link
-                key={item}
-                href={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
-                className="hover:text-white transition-colors"
-              >
-                {item}
+            {navLinks.map(({ label, href }) => (
+              <Link key={label} href={href} className="hover:text-white transition-colors">
+                {label}
               </Link>
             ))}
           </div>
@@ -44,10 +71,24 @@ export default async function WikiIndex() {
           <span className="text-gray-300">Wiki</span>
         </nav>
 
-        <div className="mb-10">
+        <div className="mb-8">
           <h1 className="text-4xl font-extrabold tracking-tight mb-2">Wiki</h1>
           <p className="text-gray-400">Browse all community-contributed pages.</p>
         </div>
+
+        {/* Active filter banner */}
+        {activeFilter && (
+          <div className="flex items-center gap-3 mb-6 rounded-lg bg-gray-900 border border-gray-800 px-4 py-3">
+            <span className="text-sm text-gray-400">Filtering by:</span>
+            <span className="text-sm font-medium text-white">{activeFilter}</span>
+            <Link
+              href="/wiki"
+              className="ml-auto text-xs text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Clear ✕
+            </Link>
+          </div>
+        )}
 
         {pages && pages.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -77,7 +118,14 @@ export default async function WikiIndex() {
           </div>
         ) : (
           <div className="rounded-xl border border-gray-800 bg-gray-900 p-12 text-center">
-            <p className="text-gray-500">No pages found. Check back soon.</p>
+            <p className="text-gray-500">
+              {activeFilter ? 'No pages match this filter.' : 'No pages found. Check back soon.'}
+            </p>
+            {activeFilter && (
+              <Link href="/wiki" className="mt-3 inline-block text-sm text-red-400 hover:text-red-300 transition-colors">
+                Browse all pages
+              </Link>
+            )}
           </div>
         )}
       </div>
