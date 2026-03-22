@@ -9,12 +9,13 @@ import { notFound } from 'next/navigation';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Gym = {
-  leader:   string;
-  city:     string;
-  type:     string;
-  badge:    string;
-  levelCap: number;
-  sprite?:  string;
+  leader:     string;
+  city:       string;
+  type:       string;
+  badge:      string;
+  levelCap:   number;
+  sprite?:    string;
+  gymNumber?: number; // override when multiple leaders share one gym slot
 };
 
 type E4Member = {
@@ -275,39 +276,58 @@ const REGIONS: Record<string, RegionData> = {
     accentBg:     'bg-purple-500/10',
     accentBorder: 'border-purple-500/30',
     accentText:   'text-purple-400',
-    description:  'A northern region with towering mountains, ancient mythology, and the creator Pokémon Arceus at its center.',
+    description:  'A northern region with towering mountains, ancient mythology, and the creator Pokémon Arceus at its center. Sinnoh\'s harsh terrain and rich lore make it one of the most expansive regions in PokéMMO.',
     mapImage:     'https://images.shoutwiki.com/pokemmo/thumb/a/ae/Map_Sinnoh_Art.png/800px-Map_Sinnoh_Art.png',
+    starters: [
+      {
+        name:   'turtwig',
+        slug:   'turtwig',
+        sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/387.gif',
+      },
+      {
+        name:   'chimchar',
+        slug:   'chimchar',
+        sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/390.gif',
+      },
+      {
+        name:   'piplup',
+        slug:   'piplup',
+        sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/393.gif',
+      },
+    ],
     gyms: [
-      { leader: 'Roark',        city: 'Oreburgh City',  type: 'rock',     badge: 'Coal Badge',   levelCap: 15 },
-      { leader: 'Gardenia',     city: 'Eterna City',    type: 'grass',    badge: 'Forest Badge', levelCap: 22 },
-      { leader: 'Maylene',      city: 'Veilstone City', type: 'fighting', badge: 'Cobble Badge', levelCap: 28 },
-      { leader: 'Crasher Wake', city: 'Pastoria City',  type: 'water',    badge: 'Fen Badge',    levelCap: 30 },
-      { leader: 'Fantina',      city: 'Hearthome City', type: 'ghost',    badge: 'Relic Badge',  levelCap: 36 },
-      { leader: 'Byron',        city: 'Canalave City',  type: 'steel',    badge: 'Mine Badge',   levelCap: 40 },
-      { leader: 'Candice',      city: 'Snowpoint City', type: 'ice',      badge: 'Icicle Badge', levelCap: 44 },
-      { leader: 'Volkner',      city: 'Sunyshore City', type: 'electric', badge: 'Beacon Badge', levelCap: 50 },
+      { leader: 'Roark',        city: 'Oreburgh City',  type: 'rock',     badge: 'Coal Badge',   levelCap: 27, sprite: 'https://images.shoutwiki.com/pokemmo/3/38/Spr_Pt_Roark.png'         },
+      { leader: 'Gardenia',     city: 'Eterna City',    type: 'grass',    badge: 'Forest Badge', levelCap: 29, sprite: 'https://images.shoutwiki.com/pokemmo/0/07/Spr_Pt_Gardenia.png'      },
+      { leader: 'Fantina',      city: 'Hearthome City', type: 'ghost',    badge: 'Relic Badge',  levelCap: 34, sprite: 'https://images.shoutwiki.com/pokemmo/3/33/Spr_Pt_Fantina.png'       },
+      { leader: 'Maylene',      city: 'Veilstone City', type: 'fighting', badge: 'Cobble Badge', levelCap: 37, sprite: 'https://images.shoutwiki.com/pokemmo/5/52/Spr_Pt_Maylene.png'       },
+      { leader: 'Crasher Wake', city: 'Pastoria City',  type: 'water',    badge: 'Fen Badge',    levelCap: 43, sprite: 'https://images.shoutwiki.com/pokemmo/0/06/Spr_Pt_Crasher_Wake.png'  },
+      { leader: 'Byron',        city: 'Canalave City',  type: 'steel',    badge: 'Mine Badge',   levelCap: 46, sprite: 'https://images.shoutwiki.com/pokemmo/f/f0/Spr_Pt_Byron.png'         },
+      { leader: 'Candice',      city: 'Snowpoint City', type: 'ice',      badge: 'Icicle Badge', levelCap: 52, sprite: 'https://images.shoutwiki.com/pokemmo/8/88/Spr_Pt_Candice.png'       },
+      { leader: 'Volkner',      city: 'Sunyshore City', type: 'electric', badge: 'Beacon Badge', levelCap: 60, sprite: 'https://images.shoutwiki.com/pokemmo/8/8a/Spr_Pt_Volkner.png'       },
     ],
     eliteFour: [
-      { name: 'Aaron',  type: 'bug'     },
-      { name: 'Bertha', type: 'ground'  },
-      { name: 'Flint',  type: 'fire'    },
-      { name: 'Lucian', type: 'psychic' },
+      { name: 'Aaron',  type: 'bug',     sprite: 'https://images.shoutwiki.com/pokemmo/1/1a/Spr_DP_Aaron.png'  },
+      { name: 'Bertha', type: 'ground',  sprite: 'https://images.shoutwiki.com/pokemmo/f/f7/Spr_DP_Bertha.png' },
+      { name: 'Flint',  type: 'fire',    sprite: 'https://images.shoutwiki.com/pokemmo/c/cb/Spr_DP_Flint.png'  },
+      { name: 'Lucian', type: 'psychic', sprite: 'https://images.shoutwiki.com/pokemmo/7/74/Spr_DP_Lucian.png' },
     ],
-    champion: { name: 'Cynthia', type: 'dragon' },
+    champion: { name: 'Cynthia', type: 'dragon', sprite: 'https://images.shoutwiki.com/pokemmo/2/2f/Spr_DP_Cynthia.png' },
     cities: [
-      { name: 'Twinleaf Town',  slug: 'twinleaf-town'  },
-      { name: 'Sandgem Town',   slug: 'sandgem-town'   },
-      { name: 'Jubilife City',  slug: 'jubilife-city'  },
-      { name: 'Oreburgh City',  slug: 'oreburgh-city'  },
-      { name: 'Eterna City',    slug: 'eterna-city'    },
-      { name: 'Hearthome City', slug: 'hearthome-city' },
-      { name: 'Solaceon Town',  slug: 'solaceon-town'  },
-      { name: 'Veilstone City', slug: 'veilstone-city' },
-      { name: 'Pastoria City',  slug: 'pastoria-city'  },
-      { name: 'Celestic Town',  slug: 'celestic-town'  },
-      { name: 'Canalave City',  slug: 'canalave-city'  },
-      { name: 'Snowpoint City', slug: 'snowpoint-city' },
-      { name: 'Sunyshore City', slug: 'sunyshore-city' },
+      { name: 'Twinleaf Town',    slug: 'twinleaf-town',         image: 'https://images.shoutwiki.com/pokemmo/thumb/3/3b/Twinleaf_Town.png/200px-Twinleaf_Town.png'                                                   },
+      { name: 'Sandgem Town',     slug: 'sandgem-town',          image: 'https://images.shoutwiki.com/pokemmo/thumb/c/cb/Sandgem_Town.png/200px-Sandgem_Town.png'                                                     },
+      { name: 'Jubilife City',    slug: 'jubilife-city',         image: 'https://images.shoutwiki.com/pokemmo/thumb/9/98/Jubilife_City.png/200px-Jubilife_City.png'                                                   },
+      { name: 'Oreburgh City',    slug: 'oreburgh-city',         image: 'https://images.shoutwiki.com/pokemmo/thumb/7/7c/Oreburgh_City.png/200px-Oreburgh_City.png'                                                   },
+      { name: 'Floaroma Town',    slug: 'floaroma-town',         image: 'https://images.shoutwiki.com/pokemmo/thumb/f/fc/Floaroma_Town.png/200px-Floaroma_Town.png'                                                   },
+      { name: 'Eterna City',      slug: 'eterna-city',           image: 'https://images.shoutwiki.com/pokemmo/thumb/d/d3/Eterna_City.png/200px-Eterna_City.png'                                                       },
+      { name: 'Hearthome City',   slug: 'hearthome-city',        image: 'https://images.shoutwiki.com/pokemmo/thumb/7/7d/Hearthome_City.png/200px-Hearthome_City.png'                                                 },
+      { name: 'Solaceon Town',    slug: 'solaceon-town',         image: 'https://images.shoutwiki.com/pokemmo/thumb/b/ba/Solaceon_Town.png/200px-Solaceon_Town.png'                                                   },
+      { name: 'Veilstone City',   slug: 'veilstone-city',        image: 'https://images.shoutwiki.com/pokemmo/thumb/7/7e/Veilstone_City.png/200px-Veilstone_City.png'                                                 },
+      { name: 'Pastoria City',    slug: 'pastoria-city',         image: 'https://images.shoutwiki.com/pokemmo/thumb/e/eb/Pastoria_City.png/200px-Pastoria_City.png'                                                   },
+      { name: 'Celestic Town',    slug: 'celestic-town',         image: 'https://images.shoutwiki.com/pokemmo/thumb/a/af/Celestic_Town.png/200px-Celestic_Town.png'                                                   },
+      { name: 'Canalave City',    slug: 'canalave-city',         image: 'https://images.shoutwiki.com/pokemmo/thumb/3/32/Canalave_City.png/200px-Canalave_City.png'                                                   },
+      { name: 'Snowpoint City',   slug: 'snowpoint-city',        image: 'https://images.shoutwiki.com/pokemmo/thumb/c/c4/Snowpoint_City.png/200px-Snowpoint_City.png'                                                 },
+      { name: 'Sunyshore City',   slug: 'sunyshore-city',        image: 'https://images.shoutwiki.com/pokemmo/thumb/c/ce/Sunyshore_City.png/200px-Sunyshore_City.png'                                                 },
+      { name: 'Pokémon League',   slug: 'sinnoh-pokemon-league', image: 'https://images.shoutwiki.com/pokemmo/thumb/5/5c/Sinnoh_Pok%C3%A9mon_League.png/200px-Sinnoh_Pok%C3%A9mon_League.png' },
     ],
     routes: Array.from({ length: 30 }, (_, i) => ({
       label: `Route ${201 + i}`,
@@ -327,38 +347,60 @@ const REGIONS: Record<string, RegionData> = {
     accentBg:     'bg-gray-500/10',
     accentBorder: 'border-gray-500/30',
     accentText:   'text-gray-300',
-    description:  'A diverse, far-away region inspired by urban life. Home to Reshiram, Zekrom, and the legendary Kyurem.',
+    description:  'A diverse, far-away region inspired by urban life. Home to the legendary dragons Reshiram, Zekrom, and Kyurem. Unova\'s bustling cities and sprawling routes offer a unique challenge for trainers in PokéMMO.',
     mapImage:     'https://images.shoutwiki.com/pokemmo/thumb/a/ae/Map_Unova_Art.png/800px-Map_Unova_Art.png',
+    starters: [
+      {
+        name:   'snivy',
+        slug:   'snivy',
+        sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/495.gif',
+      },
+      {
+        name:   'tepig',
+        slug:   'tepig',
+        sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/498.gif',
+      },
+      {
+        name:   'oshawott',
+        slug:   'oshawott',
+        sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/501.gif',
+      },
+    ],
     gyms: [
-      { leader: 'Cilan / Chili / Cress', city: 'Striaton City',  type: 'grass',    badge: 'Trio Badge',   levelCap: 12 },
-      { leader: 'Lenora',                city: 'Nacrene City',   type: 'normal',   badge: 'Basic Badge',  levelCap: 18 },
-      { leader: 'Burgh',                 city: 'Castelia City',  type: 'bug',      badge: 'Insect Badge', levelCap: 22 },
-      { leader: 'Elesa',                 city: 'Nimbasa City',   type: 'electric', badge: 'Bolt Badge',   levelCap: 26 },
-      { leader: 'Clay',                  city: 'Driftveil City', type: 'ground',   badge: 'Quake Badge',  levelCap: 31 },
-      { leader: 'Skyla',                 city: 'Mistralton City',type: 'flying',   badge: 'Jet Badge',    levelCap: 37 },
-      { leader: 'Brycen',                city: 'Icirrus City',   type: 'ice',      badge: 'Freeze Badge', levelCap: 41 },
-      { leader: 'Drayden',               city: 'Opelucid City',  type: 'dragon',   badge: 'Legend Badge', levelCap: 46 },
+      { gymNumber: 1, leader: 'Cilan',   city: 'Striaton City',  type: 'grass',    badge: 'Trio Badge',   levelCap: 24, sprite: 'https://images.shoutwiki.com/pokemmo/b/bd/Spr_BW_Cilan.png'   },
+      { gymNumber: 1, leader: 'Chili',   city: 'Striaton City',  type: 'fire',     badge: 'Trio Badge',   levelCap: 24, sprite: 'https://images.shoutwiki.com/pokemmo/8/86/Spr_BW_Chili.png'   },
+      { gymNumber: 1, leader: 'Cress',   city: 'Striaton City',  type: 'water',    badge: 'Trio Badge',   levelCap: 24, sprite: 'https://images.shoutwiki.com/pokemmo/5/57/Spr_BW_Cress.png'   },
+      { gymNumber: 2, leader: 'Lenora',  city: 'Nacrene City',   type: 'normal',   badge: 'Basic Badge',  levelCap: 27, sprite: 'https://images.shoutwiki.com/pokemmo/a/a3/Spr_BW_Lenora.png'  },
+      { gymNumber: 3, leader: 'Burgh',   city: 'Castelia City',  type: 'bug',      badge: 'Insect Badge', levelCap: 31, sprite: 'https://images.shoutwiki.com/pokemmo/3/3a/Spr_BW_Burgh.png'   },
+      { gymNumber: 4, leader: 'Elesa',   city: 'Nimbasa City',   type: 'electric', badge: 'Bolt Badge',   levelCap: 35, sprite: 'https://images.shoutwiki.com/pokemmo/7/7c/Spr_BW_Elesa.png'   },
+      { gymNumber: 5, leader: 'Clay',    city: 'Driftveil City', type: 'ground',   badge: 'Quake Badge',  levelCap: 38, sprite: 'https://images.shoutwiki.com/pokemmo/3/31/Spr_BW_Clay.png'    },
+      { gymNumber: 6, leader: 'Skyla',   city: 'Mistralton City',type: 'flying',   badge: 'Jet Badge',    levelCap: 43, sprite: 'https://images.shoutwiki.com/pokemmo/c/c2/Spr_BW_Skyla.png'   },
+      { gymNumber: 7, leader: 'Brycen',  city: 'Icirrus City',   type: 'ice',      badge: 'Freeze Badge', levelCap: 46, sprite: 'https://images.shoutwiki.com/pokemmo/9/91/Spr_BW_Brycen.png'  },
+      { gymNumber: 8, leader: 'Iris',    city: 'Opelucid City',  type: 'dragon',   badge: 'Legend Badge', levelCap: 56, sprite: 'https://images.shoutwiki.com/pokemmo/f/f8/Spr_BW_Iris.png'    },
     ],
     eliteFour: [
-      { name: 'Shauntal', type: 'ghost'    },
-      { name: 'Marshal',  type: 'fighting' },
-      { name: 'Grimsley', type: 'dark'     },
-      { name: 'Caitlin',  type: 'psychic'  },
+      { name: 'Shauntal', type: 'ghost',    sprite: 'https://images.shoutwiki.com/pokemmo/2/28/Spr_BW_Shauntal.png' },
+      { name: 'Marshal',  type: 'fighting', sprite: 'https://images.shoutwiki.com/pokemmo/2/2e/Spr_BW_Marshal.png'  },
+      { name: 'Grimsley', type: 'dark',     sprite: 'https://images.shoutwiki.com/pokemmo/b/bf/Spr_BW_Grimsley.png' },
+      { name: 'Caitlin',  type: 'psychic',  sprite: 'https://images.shoutwiki.com/pokemmo/8/86/Spr_BW_Caitlin.png'  },
     ],
-    champion: { name: 'Alder', type: 'bug' },
+    champion: { name: 'Alder', type: 'bug', sprite: 'https://images.shoutwiki.com/pokemmo/3/3f/Spr_BW_Alder.png' },
     cities: [
-      { name: 'Nuvema Town',    slug: 'nuvema-town'    },
-      { name: 'Accumula Town',  slug: 'accumula-town'  },
-      { name: 'Striaton City',  slug: 'striaton-city'  },
-      { name: 'Nacrene City',   slug: 'nacrene-city'   },
-      { name: 'Castelia City',  slug: 'castelia-city'  },
-      { name: 'Nimbasa City',   slug: 'nimbasa-city'   },
-      { name: 'Driftveil City', slug: 'driftveil-city' },
-      { name: 'Mistralton City',slug: 'mistralton-city'},
-      { name: 'Icirrus City',   slug: 'icirrus-city'   },
-      { name: 'Opelucid City',  slug: 'opelucid-city'  },
-      { name: 'Lacunosa Town',  slug: 'lacunosa-town'  },
-      { name: 'Undella Town',   slug: 'undella-town'   },
+      { name: 'Nuvema Town',          slug: 'nuvema-town',         image: 'https://images.shoutwiki.com/pokemmo/thumb/b/bf/Nuvema_Town.png/200px-Nuvema_Town.png'                                               },
+      { name: 'Accumula Town',        slug: 'accumula-town',       image: 'https://images.shoutwiki.com/pokemmo/thumb/8/84/Accumula_Town_Autumn_BW.png/200px-Accumula_Town_Autumn_BW.png'                     },
+      { name: 'Striaton City',        slug: 'striaton-city',       image: 'https://images.shoutwiki.com/pokemmo/thumb/a/a8/Striaton_City.png/200px-Striaton_City.png'                                         },
+      { name: 'Nacrene City',         slug: 'nacrene-city',        image: 'https://images.shoutwiki.com/pokemmo/thumb/9/9d/Nacrene_City_Spring_BW.png/200px-Nacrene_City_Spring_BW.png'                       },
+      { name: 'Castelia City',        slug: 'castelia-city',       image: 'https://images.shoutwiki.com/pokemmo/thumb/d/d0/Castelia_City_Map_BW.png/200px-Castelia_City_Map_BW.png'                           },
+      { name: 'Nimbasa City',         slug: 'nimbasa-city',        image: 'https://images.shoutwiki.com/pokemmo/thumb/5/57/Nimbasa_City_Spring_BW.png/200px-Nimbasa_City_Spring_BW.png'                       },
+      { name: 'Driftveil City',       slug: 'driftveil-city',      image: 'https://images.shoutwiki.com/pokemmo/thumb/5/53/Driftveil_City_BW.png/200px-Driftveil_City_BW.png'                                 },
+      { name: 'Mistralton City',      slug: 'mistralton-city',     image: 'https://images.shoutwiki.com/pokemmo/thumb/b/bd/Mistralton_City_Spring_B.png/200px-Mistralton_City_Spring_B.png'                   },
+      { name: 'Icirrus City',         slug: 'icirrus-city',        image: 'https://images.shoutwiki.com/pokemmo/thumb/d/d6/Icirrus_City.png/200px-Icirrus_City.png'                                           },
+      { name: 'Opelucid City',        slug: 'opelucid-city',       image: 'https://images.shoutwiki.com/pokemmo/thumb/4/4d/Opelucid_City.png/200px-Opelucid_City.png'                                         },
+      { name: 'Pokémon League',       slug: 'unova-pokemon-league',image: 'https://images.shoutwiki.com/pokemmo/thumb/0/07/Pok%C3%A9mon_League_BW.png/200px-Pok%C3%A9mon_League_BW.png'                       },
+      { name: 'Lacunosa Town',        slug: 'lacunosa-town',       image: 'https://images.shoutwiki.com/pokemmo/thumb/8/83/Lacunosa_Town.png/200px-Lacunosa_Town.png'                                         },
+      { name: 'Undella Town',         slug: 'undella-town',        image: 'https://images.shoutwiki.com/pokemmo/thumb/7/7b/Undella_Town_BW.png/200px-Undella_Town_BW.png'                                     },
+      { name: 'Black City/White Forest',slug: 'black-city',        image: 'https://images.shoutwiki.com/pokemmo/thumb/a/a6/Black_City_and_White_Forest.png/200px-Black_City_and_White_Forest.png'             },
+      { name: 'Anville Town',         slug: 'anville-town',        image: 'https://images.shoutwiki.com/pokemmo/thumb/6/6f/Anville_Town.png/200px-Anville_Town.png'                                           },
     ],
     routes: Array.from({ length: 18 }, (_, i) => ({
       label: `Route ${i + 1}`,
@@ -415,7 +457,7 @@ function GymCard({
       <div className="p-4 flex flex-col gap-2 flex-1">
         <div className="flex items-center justify-between">
           <span className={`text-xs font-bold uppercase tracking-widest ${accentText}`}>
-            Gym #{index + 1}
+            Gym #{gym.gymNumber ?? index + 1}
           </span>
           <TypeBadge type={gym.type} className="h-5" />
         </div>
@@ -545,7 +587,7 @@ export default async function RegionPage({
                         <img
                           src={s.sprite}
                           alt={s.name}
-                          className="h-20 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-200"
+                          className="w-16 h-16 object-contain mx-auto drop-shadow-lg group-hover:scale-110 transition-transform duration-200"
                         />
                         <span className="text-xs font-medium text-gray-400 group-hover:text-white capitalize transition-colors">
                           {s.name}

@@ -190,17 +190,16 @@ export default function PokedexPage() {
         {/* Type filter pills */}
         <div className="flex flex-wrap gap-1.5 mb-5">
           {ALL_TYPES.filter(t => t !== 'fairy').map((t) => (
-            <button
+            <div
               key={t}
-              onClick={() => toggleType(t)}
-              className={`rounded-lg border px-1.5 py-0.5 transition-all ${
+              className={`rounded-lg border px-1.5 py-0.5 transition-all cursor-pointer ${
                 typeFilter.includes(t)
                   ? 'border-red-400 ring-1 ring-red-400'
                   : 'border-transparent hover:border-gray-600'
               }`}
             >
-              <TypeBadge type={t} className="h-5" />
-            </button>
+              <TypeBadge type={t} className="h-5" clickable={false} onClick={() => toggleType(t)} />
+            </div>
           ))}
         </div>
 
