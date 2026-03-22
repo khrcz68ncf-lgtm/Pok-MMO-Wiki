@@ -97,9 +97,17 @@ export default function Navbar() {
     <nav className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10">
       <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
         {/* Brand */}
-        <Link href="/" className="text-lg font-bold text-red-400 shrink-0">
-          PokéMMO Wiki
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link href="/" className="text-lg font-bold text-red-400">
+            PokéMMO Wiki
+          </Link>
+          <Link
+            href="/updates"
+            className="rounded-full bg-gray-800 border border-gray-700 hover:border-gray-500 px-2 py-0.5 text-[10px] font-medium text-gray-400 hover:text-white transition-all leading-none"
+          >
+            📢 Updates
+          </Link>
+        </div>
 
         {/* Centre nav links */}
         <div className="flex gap-6 text-sm text-gray-300">

@@ -2,7 +2,6 @@ import { supabase } from '@/lib/supabase';
 import Navbar from '@/app/components/Navbar';
 import Breadcrumb from '@/app/components/Breadcrumb';
 import TypeBadge from '@/app/components/TypeBadge';
-import MarkdownContent from '@/app/wiki/[slug]/MarkdownContent';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -538,12 +537,6 @@ export default async function RegionPage({
 
   const displayName = region.charAt(0).toUpperCase() + region.slice(1);
 
-  const { data: page } = await supabase
-    .from('pages')
-    .select('title, content, updated_at')
-    .eq('slug', region)
-    .maybeSingle();
-
   const {
     color, accentBg, accentBorder, accentText,
     description, mapImage, starters,
@@ -713,16 +706,6 @@ export default async function RegionPage({
                   {name}
                 </Link>
               ))}
-            </div>
-          </section>
-        )}
-
-        {/* ── Wiki Content ──────────────────────────────────────────────── */}
-        {page?.content?.trim() && (
-          <section>
-            <SectionHeading>General Information</SectionHeading>
-            <div className="rounded-xl bg-gray-900/40 border border-gray-800 px-6 py-5">
-              <MarkdownContent content={page.content} />
             </div>
           </section>
         )}
