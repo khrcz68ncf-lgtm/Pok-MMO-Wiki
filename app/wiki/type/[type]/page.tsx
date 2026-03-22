@@ -78,15 +78,17 @@ export default async function TypePage({
   // Fetch all Pokémon pages in one query, filter in JS
   const { data: allPages } = await supabase
     .from('pages')
-    .select('title, slug, metadata')
-    .eq('template_type', 'pokemon')
-    .not('metadata', 'is', null);
+    .select('*')
+    .eq('template_type', 'pokemon');
 
   const pages = (allPages ?? []) as Page[];
 
   // Section 2: Pokémon of this type (sorted by pokemon_id)
   const pokemonOfType = pages
-    .filter((p) => Array.isArray(p.metadata?.types) && p.metadata.types.includes(typeName))
+    .filter((p) =>
+      Array.isArray(p.metadata?.types) &&
+      p.metadata.types.map((t: string) => t.toLowerCase()).includes(typeName.toLowerCase())
+    )
     .sort((a, b) => (a.metadata.pokemon_id ?? 0) - (b.metadata.pokemon_id ?? 0));
 
   // Section 3: Moves of this type (deduplicated by name)
