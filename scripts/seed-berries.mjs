@@ -94,10 +94,47 @@ const BERRIES = [
   { name_fr: 'Baie Pommo',  name_en: 'Rowap Berry',  growth_time: 44, min_yield: 7,  max_yield: 10, seeds: [{color:'sour',amount:2,type:'plain'},{color:'dry',amount:1,type:'plain'}] },
 ];
 
+// Only seed if the table is empty
+const { count, error: countErr } = await supabase
+  .from('berries')
+  .select('*', { count: 'exact', head: true });
+
+if (countErr) {
+  console.error('❌ Could not check table:', countErr.message);
+  process.exit(1);
+}
+
+if (count && count > 0) {
+  console.log(`ℹ Table already has ${count} berries — skipping seed. Delete rows first to re-seed.`);
+  process.exit(0);
+}
+
 const { error } = await supabase.from('berries').insert(BERRIES);
 
 if (error) {
-  console.error('❌ Seed failed:', error.message);
+  if (error.message.includes('schema cache') || error.message.includes('does not exist')) {
+    console.error('❌ Table "berries" not found. Run the CREATE TABLE SQL in Supabase first:');
+    console.error(`
+CREATE TABLE IF NOT EXISTS berries (
+  id uuid default gen_random_uuid() primary key,
+  name_fr text not null,
+  name_en text not null,
+  growth_time int not null,
+  min_yield int not null,
+  max_yield int not null,
+  seeds jsonb default '[]',
+  effect text,
+  updated_at timestamp default now()
+);
+ALTER TABLE berries ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view berries" ON berries FOR SELECT USING (true);
+CREATE POLICY "Only admins can modify berries" ON berries FOR ALL USING (
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+);
+    `.trim());
+  } else {
+    console.error('❌ Seed failed:', error.message);
+  }
   process.exit(1);
 } else {
   console.log(`✓ Seeded ${BERRIES.length} berries successfully.`);

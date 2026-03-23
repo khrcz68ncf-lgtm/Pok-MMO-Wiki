@@ -69,10 +69,10 @@ function SpriteOrDot({ pokemon, size = 48 }: { pokemon: TeamPokemon; size?: numb
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function TeamBuilderPage() {
-  const [teams,         setTeams]         = useState<Team[]>([]);
-  const [activeTeamId,  setActiveTeamId]  = useState<string | null>(null);
-  const [teamPokemon,   setTeamPokemon]   = useState<TeamPokemon[]>([]);
-  const [selectedSlot,  setSelectedSlot]  = useState<number | null>(null);
+  const [teams,          setTeams]          = useState<Team[]>([]);
+  const [activeTeamId,   setActiveTeamId]   = useState<string | null>(null);
+  const [pokemonByTeam,  setPokemonByTeam]  = useState<Record<string, TeamPokemon[]>>({});
+  const [selectedSlot,   setSelectedSlot]   = useState<number | null>(null);
   const [showSearch,    setShowSearch]    = useState(false);
   const [showImport,    setShowImport]    = useState(false);
   const [importText,    setImportText]    = useState('');
@@ -87,6 +87,14 @@ export default function TeamBuilderPage() {
   const [teamTags,      setTeamTags]      = useState<string[]>([]);
   const [showTagDrop,   setShowTagDrop]   = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
+
+  // Derived view of the active team's Pokémon — all read sites stay unchanged
+  const teamPokemon: TeamPokemon[] = activeTeamId ? (pokemonByTeam[activeTeamId] ?? []) : [];
+
+  // Helper: update only the active team's slice in the map
+  function setPokemonForTeam(teamId: string, updater: (prev: TeamPokemon[]) => TeamPokemon[]) {
+    setPokemonByTeam(prev => ({ ...prev, [teamId]: updater(prev[teamId] ?? []) }));
+  }
 
   const activeTeam = teams.find(t => t.id === activeTeamId) ?? null;
 
@@ -115,20 +123,7 @@ export default function TeamBuilderPage() {
   // ── Load team pokemon when active team changes ────────────────────────────
 
   useEffect(() => {
-    if (!activeTeamId) { setTeamPokemon([]); return; }
-    supabase
-      .from('team_pokemon')
-      .select('*')
-      .eq('team_id', activeTeamId)
-      .order('slot')
-      .then(({ data }) => {
-        // Build 6-slot array
-        const filled: TeamPokemon[] = Array.from({ length: 6 }, (_, i) => {
-          return (data ?? []).find(p => p.slot === i + 1) ?? emptySlot(activeTeamId, i + 1);
-        });
-        setTeamPokemon(filled);
-        setSelectedSlot(null);
-      });
+    if (!activeTeamId) { setSelectedSlot(null); return; }
 
     const team = teams.find(t => t.id === activeTeamId);
     if (team) {
@@ -137,6 +132,25 @@ export default function TeamBuilderPage() {
       setTeamPrice(team.price != null ? String(team.price) : '');
       setTeamTags(team.tags ?? []);
     }
+
+    setSelectedSlot(null);
+
+    // Skip fetch if already cached for this team
+    if (pokemonByTeam[activeTeamId]) return;
+
+    supabase
+      .from('team_pokemon')
+      .select('*')
+      .eq('team_id', activeTeamId)
+      .order('slot')
+      .then(({ data }) => {
+        const filled: TeamPokemon[] = Array.from({ length: 6 }, (_, i) =>
+          (data ?? []).find(p => p.slot === i + 1) ?? emptySlot(activeTeamId, i + 1)
+        );
+        setPokemonByTeam(prev => ({ ...prev, [activeTeamId]: filled }));
+      });
+  // pokemonByTeam intentionally excluded — we only want to re-run on team switch
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTeamId, teams]);
 
   // ── Create team ───────────────────────────────────────────────────────────
@@ -161,7 +175,8 @@ export default function TeamBuilderPage() {
     if (!confirm('Delete this team?')) return;
     await supabase.from('teams').delete().eq('id', id);
     setTeams(prev => prev.filter(t => t.id !== id));
-    if (activeTeamId === id) { setActiveTeamId(null); setTeamPokemon([]); }
+    setPokemonByTeam(prev => { const next = { ...prev }; delete next[id]; return next; });
+    if (activeTeamId === id) setActiveTeamId(null);
   }
 
   // ── Save team metadata ────────────────────────────────────────────────────
@@ -199,7 +214,7 @@ export default function TeamBuilderPage() {
     } else {
       const { data } = await supabase.from('team_pokemon').insert({ ...rest }).select().single();
       if (data) {
-        setTeamPokemon(prev => prev.map(tp => tp.slot === p.slot ? { ...p, id: data.id } : tp));
+        setPokemonForTeam(activeTeamId, prev => prev.map(tp => tp.slot === p.slot ? { ...p, id: data.id } : tp));
       }
     }
     // Touch updated_at on team
@@ -211,7 +226,7 @@ export default function TeamBuilderPage() {
   async function removePokemon(slot: number) {
     if (!activeTeamId) return;
     await supabase.from('team_pokemon').delete().eq('team_id', activeTeamId).eq('slot', slot);
-    setTeamPokemon(prev => prev.map(p => p.slot === slot ? emptySlot(activeTeamId, slot) : p));
+    setPokemonForTeam(activeTeamId, prev => prev.map(p => p.slot === slot ? emptySlot(activeTeamId, slot) : p));
     if (selectedSlot === slot) setSelectedSlot(null);
   }
 
@@ -229,7 +244,7 @@ export default function TeamBuilderPage() {
       pokemon_id:   result.pokemon_id ?? null,
       sprite_url:   spriteUrl,
     };
-    setTeamPokemon(prev => prev.map(tp => tp.slot === slot ? p : tp));
+    setPokemonForTeam(activeTeamId, prev => prev.map(tp => tp.slot === slot ? p : tp));
     setShowSearch(false);
     await savePokemon(p);
   }
@@ -237,11 +252,12 @@ export default function TeamBuilderPage() {
   // ── Update pokemon ────────────────────────────────────────────────────────
 
   function updatePokemon(slot: number, updates: Partial<TeamPokemon>) {
-    setTeamPokemon(prev => prev.map(p => p.slot === slot ? { ...p, ...updates } : p));
+    if (!activeTeamId) return;
+    setPokemonForTeam(activeTeamId, prev => prev.map(p => p.slot === slot ? { ...p, ...updates } : p));
   }
 
   async function flushPokemon(slot: number) {
-    const p = teamPokemon.find(tp => tp.slot === slot);
+    const p = (activeTeamId ? (pokemonByTeam[activeTeamId] ?? []) : []).find(tp => tp.slot === slot);
     if (p && p.pokemon_name) await savePokemon(p);
   }
 
@@ -288,7 +304,7 @@ export default function TeamBuilderPage() {
       if (!parsed_entry || !parsed_entry.pokemon_name) return emptySlot(activeTeamId, i + 1);
       return { ...emptySlot(activeTeamId, i + 1), ...parsed_entry, slot: i + 1 };
     });
-    setTeamPokemon(newPokemon);
+    setPokemonForTeam(activeTeamId, () => newPokemon);
     // Save filled ones
     for (const p of newPokemon.filter(p => p.pokemon_name)) {
       await supabase.from('team_pokemon').insert({
@@ -320,6 +336,12 @@ export default function TeamBuilderPage() {
       await supabase.from('team_pokemon').insert(
         srcPokemon.map(({ id: _id, team_id: _tid, ...rest }) => ({ ...rest, team_id: newTeam.id }))
       );
+    }
+    // Pre-populate cache for the new team so switching to it doesn't refetch
+    const srcSlots = pokemonByTeam[team.id];
+    if (srcSlots) {
+      const cloned = srcSlots.map(p => ({ ...p, id: crypto.randomUUID(), team_id: newTeam.id }));
+      setPokemonByTeam(prev => ({ ...prev, [newTeam.id]: cloned }));
     }
     setTeams(prev => [newTeam, ...prev]);
     setActiveTeamId(newTeam.id);
