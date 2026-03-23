@@ -3,7 +3,7 @@ type Props = {
   className?: string;
 };
 
-export default function CategoryBadge({ category, className = 'h-6' }: Props) {
+export default function CategoryBadge({ category, className = 'h-7' }: Props) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img

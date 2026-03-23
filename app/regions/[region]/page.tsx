@@ -1,9 +1,25 @@
+import type { Metadata } from 'next';
 import { supabase } from '@/lib/supabase';
 import Navbar from '@/app/components/Navbar';
 import Breadcrumb from '@/app/components/Breadcrumb';
 import TypeBadge from '@/app/components/TypeBadge';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ region: string }> }
+): Promise<Metadata> {
+  const { region } = await params;
+  const name = region.charAt(0).toUpperCase() + region.slice(1);
+  return {
+    title:       name,
+    description: `Discover ${name} in PokéMMO — gym leaders, cities, routes and landmarks.`,
+    openGraph: {
+      title:       `${name} | PokéMMO Wiki`,
+      description: `Discover ${name} in PokéMMO — gym leaders, cities, routes and landmarks.`,
+    },
+  };
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

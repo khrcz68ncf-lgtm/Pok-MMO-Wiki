@@ -52,10 +52,10 @@ export default function PokemonSearchModal({ onSelect, onClose }: Props) {
       setResults((data ?? []).map(p => ({
         slug:       p.slug,
         title:      p.title,
-        pokemon_id: p.metadata?.id,
+        pokemon_id: p.metadata?.pokemon_id,
         types:      p.metadata?.types ?? [],
-        sprite_url: p.metadata?.id
-          ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${p.metadata.id}.gif`
+        sprite_url: p.metadata?.pokemon_id
+          ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${p.metadata.pokemon_id}.gif`
           : undefined,
       })));
       setLoading(false);

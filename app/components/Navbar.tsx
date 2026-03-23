@@ -11,10 +11,12 @@ type Profile = {
 };
 
 const navLinks = [
-  { label: 'Home',      href: '/'          },
-  { label: 'Wiki',      href: '/wiki'      },
-  { label: 'Guides',    href: '/guides'    },
-  { label: 'Community', href: '/community' },
+  { label: 'Home',      href: '/'                   },
+  { label: 'Wiki',      href: '/wiki'               },
+  { label: 'Guides',    href: '/guides'             },
+  { label: 'Dmg Calc',  href: '/damage-calculator'   },
+  { label: 'Breeding',  href: '/breeding-calculator' },
+  { label: 'Community', href: '/community'           },
 ];
 
 const menuItems = [

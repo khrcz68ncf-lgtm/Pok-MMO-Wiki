@@ -203,7 +203,9 @@ export default function TradeModal({
         (data ?? []).map((p) => ({
           slug:     p.slug,
           title:    p.title,
-          imageUrl: p.metadata?.sprites?.front ?? null,
+          imageUrl: p.template_type === 'pokemon' && p.metadata?.pokemon_id
+            ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${p.metadata.pokemon_id}.gif`
+            : null,
           type:     p.template_type === 'pokemon' ? 'pokemon' : 'item',
         }))
       );
@@ -300,7 +302,7 @@ export default function TradeModal({
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={r.imageUrl} alt="" className="w-8 h-8 object-contain" style={{ imageRendering: 'pixelated' }} />
                     ) : (
-                      <div className="w-8 h-8 rounded bg-gray-700 flex items-center justify-center text-xs text-gray-500">?</div>
+                      <div className="w-8 h-8 rounded bg-gray-700 flex items-center justify-center text-base">📦</div>
                     )}
                     <div>
                       <p className="text-sm text-white capitalize">{r.title}</p>

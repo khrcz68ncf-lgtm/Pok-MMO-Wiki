@@ -11,7 +11,7 @@ import CategoryBadge from '@/app/components/CategoryBadge';
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Ability  = { name: string; is_hidden: boolean };
-type Move     = { name: string; method: string; level: number; type?: string; damage_class?: string };
+type Move     = { name: string; method: string; level: number; type?: string; damage_class?: string; power?: number; accuracy?: number; pp?: number };
 type Sprites  = { front?: string; front_shiny?: string; back?: string; official?: string };
 type BaseStats = {
   hp: number; attack: number; defense: number;
@@ -250,6 +250,9 @@ function MovesTable({ moves }: { moves: Move[] }) {
                 <th className="px-4 py-2.5 text-left text-xs uppercase tracking-widest text-gray-500 font-semibold">Move</th>
                 <th className="px-4 py-2.5 text-left text-xs uppercase tracking-widest text-gray-500 font-semibold">Type</th>
                 <th className="px-4 py-2.5 text-left text-xs uppercase tracking-widest text-gray-500 font-semibold">Cat.</th>
+                <th className="px-4 py-2.5 text-right text-xs uppercase tracking-widest text-gray-500 font-semibold">Pwr.</th>
+                <th className="px-4 py-2.5 text-right text-xs uppercase tracking-widest text-gray-500 font-semibold">Acc.</th>
+                <th className="px-4 py-2.5 text-right text-xs uppercase tracking-widest text-gray-500 font-semibold">PP</th>
               </tr>
             </thead>
             <tbody>
@@ -273,6 +276,15 @@ function MovesTable({ moves }: { moves: Move[] }) {
                     </td>
                     <td className="px-4 py-2.5">
                       {m.damage_class ? <CategoryBadge category={m.damage_class} className="h-5" /> : <span className="text-gray-600">—</span>}
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-gray-300 font-mono text-xs">
+                      {m.power != null ? m.power : <span className="text-gray-600">—</span>}
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-gray-300 font-mono text-xs">
+                      {m.accuracy != null ? `${m.accuracy}%` : <span className="text-gray-600">—</span>}
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-gray-300 font-mono text-xs">
+                      {m.pp != null ? m.pp : <span className="text-gray-600">—</span>}
                     </td>
                   </tr>
                 );

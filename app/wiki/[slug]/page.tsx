@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { supabase } from '@/lib/supabase';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -6,6 +7,51 @@ import PokemonTemplate from './PokemonTemplate';
 import MoveTemplate from './MoveTemplate';
 import Navbar from '@/app/components/Navbar';
 import Breadcrumb from '@/app/components/Breadcrumb';
+
+function stripMarkdown(md: string): string {
+  return md
+    .replace(/!\[.*?\]\(.*?\)/g, '')   // images
+    .replace(/\[([^\]]+)\]\(.*?\)/g, '$1') // links → text
+    .replace(/#{1,6}\s+/g, '')         // headings
+    .replace(/[*_`~]+/g, '')           // bold/italic/code
+    .replace(/^\s*[-*+]\s+/gm, '')     // list bullets
+    .replace(/\n+/g, ' ')
+    .trim();
+}
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ slug: string }> }
+): Promise<Metadata> {
+  const { slug } = await params;
+  const { data: page } = await supabase
+    .from('pages')
+    .select('title, content, metadata, template_type')
+    .eq('slug', slug)
+    .single();
+
+  if (!page) return {};
+
+  let description: string;
+  if (page.template_type === 'pokemon' && page.metadata?.types) {
+    const types = (page.metadata.types as string[]).join('/');
+    description = `${page.title} is a ${types}-type Pokémon in PokéMMO. View stats, moves, type chart and more.`;
+  } else if (page.template_type === 'move' && page.metadata) {
+    const cat = page.metadata.category ?? '';
+    const pwr = page.metadata.power ? `, power ${page.metadata.power}` : '';
+    description = `${page.title} — ${cat} move${pwr}. Full details for PokéMMO.`;
+  } else {
+    description = stripMarkdown(page.content ?? '').slice(0, 160);
+  }
+
+  return {
+    title:       page.title,
+    description,
+    openGraph: {
+      title:       `${page.title} | PokéMMO Wiki`,
+      description,
+    },
+  };
+}
 
 export default async function WikiPage({
   params,
@@ -46,11 +92,14 @@ export default async function WikiPage({
       .in('slug', moveSlugs)
       .eq('template_type', 'move');
 
-    const moveTypes: Record<string, { type?: string; damage_class?: string }> = {};
+    const moveTypes: Record<string, { type?: string; damage_class?: string; power?: number; accuracy?: number; pp?: number }> = {};
     for (const mp of movePages ?? []) {
       moveTypes[mp.slug] = {
         type:         mp.metadata?.type     ?? undefined,
         damage_class: mp.metadata?.category ?? undefined,
+        power:        mp.metadata?.power    ?? undefined,
+        accuracy:     mp.metadata?.accuracy ?? undefined,
+        pp:           mp.metadata?.pp       ?? undefined,
       };
     }
 

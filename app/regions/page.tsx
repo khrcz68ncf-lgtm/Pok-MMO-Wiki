@@ -1,6 +1,16 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Navbar from '@/app/components/Navbar';
 import Breadcrumb from '@/app/components/Breadcrumb';
+
+export const metadata: Metadata = {
+  title:       'Regions',
+  description: 'Explore all 5 regions in PokéMMO: Kanto, Johto, Hoenn, Sinnoh and Unova.',
+  openGraph: {
+    title:       'Regions | PokéMMO Wiki',
+    description: 'Explore all 5 regions in PokéMMO: Kanto, Johto, Hoenn, Sinnoh and Unova.',
+  },
+};
 
 const regions = [
   { name: 'Kanto',  slug: 'kanto',  color: 'from-red-950/60',    accent: 'text-red-400',    desc: 'The original region. Home to the first 151 Pokémon.' },

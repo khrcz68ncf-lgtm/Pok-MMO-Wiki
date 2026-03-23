@@ -11,6 +11,9 @@ const categories = [
   { name: 'PvP',             icon: '⚔️', href: '/pvp',                 desc: 'Competitive builds, tiers and strategies',            gradient: 'from-orange-950/60 to-gray-900', glow: 'bg-orange-500/10', accent: 'text-orange-400' },
   { name: 'Invest Manager',  icon: '📈', href: '/trading',             desc: 'Track your trades and maximize your profits',         gradient: 'from-blue-950/60 to-gray-900',   glow: 'bg-blue-500/10',   accent: 'text-blue-400'   },
   { name: 'Team Builder',    icon: '🗂️', href: '/team-builder',        desc: 'Build and share your PokéMMO teams',                  gradient: 'from-cyan-950/60 to-gray-900',   glow: 'bg-cyan-500/10',   accent: 'text-cyan-400'   },
+  { name: 'Damage Calc',    icon: '💥', href: '/damage-calculator',   desc: 'Calculate damage with the Gen 5 formula',              gradient: 'from-rose-950/60 to-gray-900',   glow: 'bg-rose-500/10',   accent: 'text-rose-400'   },
+  { name: 'Breeding Calc', icon: '🥚', href: '/breeding-calculator', desc: 'Calculate IV breeding costs and chains for PokéMMO',   gradient: 'from-lime-950/60 to-gray-900',   glow: 'bg-lime-500/10',   accent: 'text-lime-400'   },
+  { name: 'Berries',       icon: '🫐', href: '/berries',             desc: 'Berry guide, yields, seeds and harvest calculator',    gradient: 'from-fuchsia-950/60 to-gray-900', glow: 'bg-fuchsia-500/10', accent: 'text-fuchsia-400' },
   { name: 'Swarms',          icon: '🔥', href: '/swarms',              desc: 'Daily swarm locations and Pokémon',                   gradient: 'from-red-950/60 to-gray-900',    glow: 'bg-red-500/10',    accent: 'text-red-400'    },
   { name: 'NPCs',            icon: '👤', href: '/npcs',                desc: 'NPC trainers, their teams and locations',             gradient: 'from-violet-950/60 to-gray-900', glow: 'bg-violet-500/10', accent: 'text-violet-400' },
 ];
