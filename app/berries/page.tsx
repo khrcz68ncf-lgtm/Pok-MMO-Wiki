@@ -62,9 +62,9 @@ const GROWTH_TIMES = [16, 20, 42, 44, 67];
 const REGION_PLOTS = [
   { name: 'Hoenn',  max: 33  },
   { name: 'Sinnoh', max: 98  },
-  { name: 'Unova',  max: 158 },
+  { name: 'Unova',  max: 156 },
 ];
-const MAX_PLOTS = 289;
+const MAX_PLOTS = 287;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -427,9 +427,9 @@ function BerryGuide({ berries, isAdmin, onUpdate }: { berries: Berry[]; isAdmin:
 
 function BerryCalculator({ berries }: { berries: Berry[] }) {
   const [selectedId, setSelectedId]   = useState('');
-  const [plants, setPlants]           = useState(289);
+  const [plants, setPlants]           = useState(287);
   const [useRegions, setUseRegions]   = useState(false);
-  const [regionCounts, setRegionCounts] = useState({ Hoenn: 33, Sinnoh: 98, Unova: 158 });
+  const [regionCounts, setRegionCounts] = useState({ Hoenn: 33, Sinnoh: 98, Unova: 156 });
   const [pricePerBerry, setPricePerBerry] = useState('');
   const [plantedAt, setPlantedAt]     = useState('');
   const [now, setNow]                 = useState(Date.now());
@@ -532,7 +532,7 @@ function BerryCalculator({ berries }: { berries: Berry[] }) {
         )}
         <p className="text-xs text-gray-600 mt-1">
           Total: <span className="font-semibold text-gray-400">{totalPlants}</span> plants
-          {' '}(max {MAX_PLOTS}: 33 Hoenn + 98 Sinnoh + 158 Unova)
+          {' '}(max {MAX_PLOTS}: 33 Hoenn + 98 Sinnoh + 156 Unova)
         </p>
       </div>
 

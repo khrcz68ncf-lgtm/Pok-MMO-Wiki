@@ -76,16 +76,32 @@ const TYPE_BG: Record<string, string> = {
   steel: '#5A8EA1',    fairy: '#EC8FE6',
 };
 
-const EV_LABELS: Record<string, string> = {
-  hp: 'HP', attack: 'Atk', defense: 'Def',
-  special_attack: 'SpAtk', special_defense: 'SpDef', speed: 'Spe',
+const STAT_SHORT: Record<string, string> = {
+  hp: 'HP', attack: 'ATK', defense: 'DEF',
+  special_attack: 'SpATK', special_defense: 'SpDEF', speed: 'SPE',
 };
 
 function fmtEvs(evs: Record<string, number>): string {
-  const parts = Object.entries(evs)
+  return Object.entries(evs)
     .filter(([, v]) => v > 0)
-    .map(([k, v]) => `${v} ${EV_LABELS[k] ?? k}`);
-  return parts.length ? parts.join(' / ') : '—';
+    .map(([k, v]) => `${v} ${STAT_SHORT[k] ?? k}`)
+    .join(' / ');
+}
+
+function fmtPerfectIvs(ivs: Record<string, number>): string {
+  const perfect = Object.entries(ivs)
+    .filter(([, v]) => v === 31)
+    .map(([k]) => STAT_SHORT[k] ?? k);
+  return perfect.length ? perfect.join(' / ') : '';
+}
+
+// Inline label used inside each card section
+function Label({ text }: { text: string }) {
+  return (
+    <div style={{ fontSize: 9, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 3 }}>
+      {text}
+    </div>
+  );
 }
 
 const ExportCard = forwardRef<HTMLDivElement, {
@@ -93,8 +109,8 @@ const ExportCard = forwardRef<HTMLDivElement, {
   pokemon:  TeamPokemon[];
   typesMap: Record<string, string[]>;
 }>(function ExportCard({ team, pokemon, typesMap }, ref) {
-  const filled  = pokemon.filter(p => p.pokemon_name && p.pokemon_id);
-  const empties = Array.from({ length: Math.max(0, 6 - filled.length) });
+  const slots   = Array.from({ length: 6 }, (_, i) => pokemon[i] ?? null);
+  const artBase = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork';
 
   return (
     <div
@@ -104,149 +120,161 @@ const ExportCard = forwardRef<HTMLDivElement, {
         left:       '-9999px',
         top:        0,
         width:      '1200px',
-        background: 'linear-gradient(135deg, #111827 0%, #1f2937 100%)',
-        padding:    '40px',
-        fontFamily: 'system-ui, sans-serif',
+        background: '#0f172a',
+        padding:    '36px 40px 28px',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
         color:      '#fff',
+        boxSizing:  'border-box',
       }}
     >
-      {/* Team name */}
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.5px', color: '#fff' }}>
+      {/* ── Header ── */}
+      <div style={{ marginBottom: 24, borderBottom: '1px solid #1e293b', paddingBottom: 16 }}>
+        <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', color: '#fff' }}>
           {team.name}
         </div>
         {team.description && (
-          <div style={{ fontSize: 13, color: '#9ca3af', marginTop: 4 }}>{team.description}</div>
+          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{team.description}</div>
         )}
       </div>
 
-      {/* 6 cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-        {filled.map(p => {
-          const base    = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork';
-          const artUrl  = p.is_shiny
-            ? `${base}/shiny/${p.pokemon_id}.png`
-            : `${base}/${p.pokemon_id}.png`;
+      {/* ── 3×2 Grid ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+        {slots.map((p, idx) => {
+          if (!p?.pokemon_name || !p.pokemon_id) {
+            return (
+              <div key={idx} style={{
+                background:   '#1e293b',
+                border:       '1px dashed #334155',
+                borderRadius: 14,
+                height:       260,
+                display:      'flex',
+                alignItems:   'center',
+                justifyContent: 'center',
+                color:        '#334155',
+                fontSize:     13,
+              }}>
+                Empty slot
+              </div>
+            );
+          }
+
+          const artUrl  = p.is_shiny ? `${artBase}/shiny/${p.pokemon_id}.png` : `${artBase}/${p.pokemon_id}.png`;
           const types   = (p.pokemon_slug ? typesMap[p.pokemon_slug] : null) ?? [];
-          const moves   = (p.moves ?? []).slice(0, 4);
+          const moves   = Array.from({ length: 4 }, (_, i) => (p.moves ?? [])[i] ?? '');
+          const evStr   = fmtEvs(p.evs ?? {});
+          const ivStr   = fmtPerfectIvs(p.ivs ?? {});
 
           return (
             <div
               key={p.id}
               style={{
-                background:   'rgba(255,255,255,0.05)',
-                border:       '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 16,
-                padding:      '20px 20px 16px',
+                background:   '#1e293b',
+                border:       '1px solid #334155',
+                borderRadius: 14,
+                padding:      '16px',
                 display:      'flex',
-                flexDirection:'column',
-                gap:          8,
+                flexDirection:'row',
+                gap:          14,
+                boxSizing:    'border-box',
               }}
             >
-              {/* Artwork + name row */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              {/* Left: artwork */}
+              <div style={{ width: 96, flexShrink: 0, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 4 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={artUrl}
-                  alt={p.pokemon_name ?? ''}
+                  alt={p.pokemon_name}
                   crossOrigin="anonymous"
-                  style={{ width: 80, height: 80, objectFit: 'contain', imageRendering: 'auto' }}
+                  style={{ width: 96, height: 96, objectFit: 'contain' }}
                 />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, textTransform: 'capitalize', marginBottom: 4 }}>
-                    {p.pokemon_name?.replace(/-/g, ' ')}
-                    {p.is_shiny && <span style={{ fontSize: 12, marginLeft: 6, color: '#fbbf24' }}>✨</span>}
-                  </div>
-                  <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 6 }}>
-                    Lv. {p.level} · {p.nature}
-                  </div>
-                  {/* Type badges */}
-                  {types.length > 0 && (
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      {types.map(t => (
-                        <span
-                          key={t}
-                          style={{
-                            background:   TYPE_BG[t.toLowerCase()] ?? '#6b7280',
-                            borderRadius: 4,
-                            padding:      '2px 8px',
-                            fontSize:     11,
-                            fontWeight:   600,
-                            textTransform:'capitalize',
-                            color:        '#fff',
-                          }}
-                        >
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
               </div>
 
-              {/* Held item */}
-              {p.held_item && (
-                <div style={{ fontSize: 12, color: '#d1d5db' }}>
-                  <span style={{ color: '#fbbf24' }}>@ </span>
-                  <span style={{ textTransform: 'capitalize' }}>{p.held_item.replace(/-/g, ' ')}</span>
-                </div>
-              )}
+              {/* Right: all info */}
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-              {/* Moves */}
-              {moves.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  {moves.map((m, i) => (
-                    <div key={i} style={{
-                      fontSize:     12,
-                      color:        '#e5e7eb',
-                      background:   'rgba(255,255,255,0.06)',
-                      borderRadius: 6,
-                      padding:      '3px 8px',
-                      textTransform:'capitalize',
-                    }}>
-                      — {m.replace(/-/g, ' ')}
-                    </div>
-                  ))}
+                {/* Name + level */}
+                <div>
+                  <div style={{ fontSize: 17, fontWeight: 700, textTransform: 'capitalize', color: '#fff', lineHeight: 1.2 }}>
+                    {p.pokemon_name.replace(/-/g, ' ')}
+                    {p.is_shiny && <span style={{ fontSize: 11, marginLeft: 5, color: '#fbbf24' }}>✨</span>}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                    Lv. {p.level}
+                  </div>
                 </div>
-              )}
 
-              {/* EV spread */}
-              <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
-                {fmtEvs(p.evs ?? {})}
+                {/* Type badges */}
+                {types.length > 0 && (
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {types.map(t => (
+                      <span key={t} style={{
+                        background:   TYPE_BG[t.toLowerCase()] ?? '#6b7280',
+                        borderRadius: 4,
+                        padding:      '2px 7px',
+                        fontSize:     10,
+                        fontWeight:   600,
+                        textTransform:'capitalize',
+                        color:        '#fff',
+                      }}>
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Nature · Ability */}
+                <div>
+                  <Label text="Nature · Ability" />
+                  <div style={{ fontSize: 11, color: '#e2e8f0' }}>
+                    {p.nature}
+                    {p.ability && <span style={{ color: '#94a3b8' }}> · {p.ability.replace(/-/g, ' ')}</span>}
+                  </div>
+                </div>
+
+                {/* Held item */}
+                <div>
+                  <Label text="Item" />
+                  <div style={{ fontSize: 11, color: p.held_item ? '#fbbf24' : '#475569' }}>
+                    {p.held_item ? `@ ${p.held_item.replace(/-/g, ' ')}` : 'No item'}
+                  </div>
+                </div>
+
+                {/* Moves */}
+                <div>
+                  <Label text="Moves" />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {moves.map((m, i) => (
+                      <div key={i} style={{ fontSize: 11, color: m ? '#e2e8f0' : '#334155', textTransform: 'capitalize' }}>
+                        {m ? `— ${m.replace(/-/g, ' ')}` : '—'}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* EVs */}
+                {evStr && (
+                  <div>
+                    <Label text="EVs" />
+                    <div style={{ fontSize: 10, color: '#7dd3fc' }}>{evStr}</div>
+                  </div>
+                )}
+
+                {/* IVs (perfect only) */}
+                {ivStr && (
+                  <div>
+                    <Label text="31 IVs" />
+                    <div style={{ fontSize: 10, color: '#86efac' }}>{ivStr}</div>
+                  </div>
+                )}
+
               </div>
             </div>
           );
         })}
-
-        {/* Empty slot placeholders */}
-        {empties.map((_, i) => (
-          <div
-            key={`empty-${i}`}
-            style={{
-              background:   'rgba(255,255,255,0.02)',
-              border:       '1px dashed rgba(255,255,255,0.08)',
-              borderRadius: 16,
-              height:       200,
-              display:      'flex',
-              alignItems:   'center',
-              justifyContent:'center',
-              color:        '#374151',
-              fontSize:     13,
-            }}
-          >
-            Empty slot
-          </div>
-        ))}
       </div>
 
-      {/* Watermark */}
-      <div style={{
-        marginTop:  28,
-        textAlign:  'center',
-        fontSize:   12,
-        color:      '#374151',
-        letterSpacing: '0.05em',
-      }}>
+      {/* ── Watermark ── */}
+      <div style={{ marginTop: 20, textAlign: 'center', fontSize: 11, color: '#1e293b', letterSpacing: '0.06em' }}>
         pokemmo-wiki.vercel.app
       </div>
     </div>

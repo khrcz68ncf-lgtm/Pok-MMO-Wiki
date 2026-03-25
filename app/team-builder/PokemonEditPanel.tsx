@@ -250,20 +250,23 @@ type Props = {
 
 type BaseStats = Stats;
 
+const FALLBACK_BASES: BaseStats = { hp: 0, attack: 0, defense: 0, special_attack: 0, special_defense: 0, speed: 0 };
+
 const MAX_EVS        = 510;
 const MAX_SINGLE_EV  = 252;
 
 export default function PokemonEditPanel({ pokemon, onChange, onRemove }: Props) {
-  const [bases, setBases] = useState<BaseStats | null>(null);
+  const [bases, setBases] = useState<BaseStats>(FALLBACK_BASES);
 
   useEffect(() => {
     if (!pokemon.pokemon_slug) return;
+    setBases(FALLBACK_BASES);
     supabase.from('pages')
       .select('metadata')
       .eq('slug', pokemon.pokemon_slug)
       .single()
       .then(({ data }) => {
-        if (data?.metadata?.base_stats) setBases(data.metadata.base_stats as BaseStats);
+        if (data?.metadata?.stats) setBases(data.metadata.stats as BaseStats);
       });
   }, [pokemon.pokemon_slug]);
 
