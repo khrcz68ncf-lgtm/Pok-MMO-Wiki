@@ -132,8 +132,11 @@ const ExportCard = forwardRef<HTMLDivElement, {
         <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', color: '#fff' }}>
           {team.name}
         </div>
+        <div style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>
+          Share Code: {team.share_code}
+        </div>
         {team.description && (
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{team.description}</div>
+          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{team.description}</div>
         )}
       </div>
 
@@ -207,17 +210,19 @@ const ExportCard = forwardRef<HTMLDivElement, {
                 {types.length > 0 && (
                   <div style={{ display: 'flex', gap: 4 }}>
                     {types.map(t => (
-                      <span key={t} style={{
-                        background:   TYPE_BG[t.toLowerCase()] ?? '#6b7280',
-                        borderRadius: 4,
-                        padding:      '2px 7px',
-                        fontSize:     10,
-                        fontWeight:   600,
-                        textTransform:'capitalize',
-                        color:        '#fff',
+                      <div key={t} style={{
+                        backgroundColor: TYPE_BG[t.toLowerCase()] ?? '#6b7280',
+                        padding:         '2px 8px',
+                        borderRadius:    '4px',
+                        color:           'white',
+                        fontWeight:      'bold',
+                        fontSize:        '11px',
+                        display:         'inline-flex',
+                        alignItems:      'center',
+                        justifyContent:  'center',
                       }}>
-                        {t}
-                      </span>
+                        {t.toUpperCase()}
+                      </div>
                     ))}
                   </div>
                 )}
@@ -235,7 +240,7 @@ const ExportCard = forwardRef<HTMLDivElement, {
                 <div>
                   <Label text="Item" />
                   <div style={{ fontSize: 11, color: p.held_item ? '#fbbf24' : '#475569' }}>
-                    {p.held_item ? `@ ${p.held_item.replace(/-/g, ' ')}` : 'No item'}
+                    {p.held_item ? p.held_item.replace(/-/g, ' ') : 'No item'}
                   </div>
                 </div>
 

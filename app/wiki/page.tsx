@@ -4,13 +4,15 @@ import Navbar from '@/app/components/Navbar';
 
 // ─── Category definitions ─────────────────────────────────────────────────────
 
+type SubcategoryLink = string | { label: string; href: string };
+
 type CategoryDef = {
   title: string;
   icon: string;
   gradient: string;   // bg gradient classes
   glow: string;       // icon container bg
   accentText: string;
-  subcategories: string[];
+  subcategories: SubcategoryLink[];
 };
 
 const CATEGORIES: CategoryDef[] = [
@@ -34,6 +36,8 @@ const CATEGORIES: CategoryDef[] = [
     subcategories: [
       'Pokédex', 'Types', 'Phenomena', 'Alphas',
       'EV Training', 'Pickup', 'Breeding', 'Battle',
+      { label: 'Abilities', href: '/wiki?type=ability' },
+      { label: 'Moves', href: '/wiki?type=move' },
     ],
   },
   {
@@ -117,15 +121,19 @@ function CategoryCard({ cat }: { cat: CategoryDef }) {
 
       {/* Pills */}
       <div className="flex flex-wrap gap-2">
-        {cat.subcategories.map((sub) => (
-          <Link
-            key={sub}
-            href={`/wiki/${toSlug(sub)}`}
-            className="rounded-full bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-500 px-3 py-1 text-xs text-gray-300 hover:text-white transition-all"
-          >
-            {sub}
-          </Link>
-        ))}
+        {cat.subcategories.map((sub) => {
+          const label = typeof sub === 'string' ? sub : sub.label;
+          const href  = typeof sub === 'string' ? `/wiki/${toSlug(sub)}` : sub.href;
+          return (
+            <Link
+              key={label}
+              href={href}
+              className="rounded-full bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-500 px-3 py-1 text-xs text-gray-300 hover:text-white transition-all"
+            >
+              {label}
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
@@ -188,11 +196,19 @@ export default async function WikiIndex({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { category, search } = await searchParams;
+  const { category, search, type } = await searchParams;
 
   const categoryFilter = typeof category === 'string' ? category : undefined;
   const searchFilter   = typeof search   === 'string' ? search   : undefined;
-  const isFiltered     = !!(categoryFilter || searchFilter);
+  const typeFilter     = typeof type     === 'string' ? type     : undefined;
+  const isFiltered     = !!(categoryFilter || searchFilter || typeFilter);
+
+  const TYPE_LABELS: Record<string, string> = {
+    ability: 'Abilities',
+    move:    'Moves',
+    item:    'Items',
+    pokemon: 'Pokémon',
+  };
 
   const [filteredResult, recentResult] = await Promise.all([
     isFiltered
@@ -203,6 +219,7 @@ export default async function WikiIndex({
             .order('title', { ascending: true });
           if (categoryFilter) q = q.ilike('category', categoryFilter);
           if (searchFilter)   q = q.ilike('title', `%${searchFilter}%`);
+          if (typeFilter)     q = q.eq('template_type', typeFilter);
           return q;
         })()
       : Promise.resolve({ data: null }),
@@ -216,7 +233,9 @@ export default async function WikiIndex({
   const filteredPages = filteredResult.data ?? [];
   const recentPages   = recentResult.data   ?? [];
 
-  const activeFilter = categoryFilter
+  const activeFilter = typeFilter
+    ? (TYPE_LABELS[typeFilter] ?? `Type: ${typeFilter}`)
+    : categoryFilter
     ? `Category: ${categoryFilter}`
     : searchFilter
     ? `Search: "${searchFilter}"`

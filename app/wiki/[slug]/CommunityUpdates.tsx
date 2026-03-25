@@ -204,12 +204,19 @@ function EditCard({
 
   const canVote = !!userId && userId !== edit.author_id;
 
+  const borderColor = edit.status === 'approved' ? 'border-green-500/30' : edit.status === 'rejected' ? 'border-red-500/20' : 'border-gray-800';
+  const leftBar     = edit.status === 'approved' ? 'bg-green-500' : edit.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-600';
+
   return (
-    <div className={`rounded-xl border ${edit.status === 'approved' ? 'border-green-500/30' : 'border-gray-800'} bg-gray-900 overflow-hidden`}>
-      {/* Applied banner */}
+    <div className={`rounded-xl border ${borderColor} bg-gray-900 overflow-hidden flex`}>
+      {/* Status bar */}
+      <div className={`w-1 shrink-0 ${leftBar}`} />
+
+      {/* Applied banner + content wrapper */}
+      <div className="flex-1 min-w-0">
       {edit.status === 'approved' && (
-        <div className="bg-green-500/10 border-b border-green-500/20 px-4 py-2 text-xs text-green-400 font-medium">
-          ✓ Applied to page
+        <div className="bg-green-500/10 border-b border-green-500/20 px-4 py-1.5 text-xs text-green-400 font-medium flex items-center gap-1.5">
+          <span>✓</span> Applied to page
         </div>
       )}
 
@@ -297,6 +304,7 @@ function EditCard({
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
@@ -493,69 +501,98 @@ export default function CommunityUpdates({
   return (
     <section className="mt-16 border-t border-gray-800 pt-10">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <h2 className="text-2xl font-semibold">
-          Community Updates
-          {edits.length > 0 && (
-            <span className="ml-2 text-sm font-normal text-gray-500">({edits.length})</span>
-          )}
-        </h2>
+      <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
+        <div>
+          <h2 className="text-2xl font-bold flex items-center gap-2.5">
+            <span className="text-xl">✏️</span>
+            Community Edits
+            {edits.length > 0 && (
+              <span className="text-sm font-normal bg-gray-800 border border-gray-700 text-gray-400 rounded-full px-2 py-0.5 leading-none">
+                {edits.length}
+              </span>
+            )}
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Player-submitted improvements to this page. Upvote edits you find accurate or helpful.
+          </p>
+        </div>
 
         {user ? (
           <button
             onClick={() => setShowModal(true)}
-            className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-sm font-semibold transition-colors"
+            className="shrink-0 px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 text-sm font-medium text-white transition-colors flex items-center gap-2"
           >
-            + Suggest an Edit
+            <span>✏️</span> Suggest an Edit
           </button>
         ) : (
-          <p className="text-sm text-gray-500">
-            <a href="/auth/login" className="text-red-400 hover:underline">Login</a> to suggest an edit
+          <p className="text-sm text-gray-500 shrink-0">
+            <a href="/auth/login" className="text-red-400 hover:underline">Log in</a> to suggest an edit
           </p>
         )}
       </div>
 
       {/* Sort tabs */}
       {edits.length > 1 && (
-        <div className="flex gap-1 mb-5">
+        <div className="flex gap-1 mt-5 mb-4">
           {(['likes', 'recent', 'views'] as SortBy[]).map(s => (
             <button
               key={s}
               onClick={() => setSortBy(s)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${
-                sortBy === s ? 'bg-red-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                sortBy === s ? 'bg-gray-700 text-white border border-gray-600' : 'text-gray-500 hover:text-white'
               }`}
             >
-              {s === 'likes' ? 'Most liked' : s === 'recent' ? 'Most recent' : 'Most viewed'}
+              {s === 'likes' ? '👍 Most liked' : s === 'recent' ? '🕐 Most recent' : '👁 Most viewed'}
             </button>
           ))}
         </div>
       )}
 
       {/* Edit cards */}
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2].map(i => (
-            <div key={i} className="h-24 rounded-xl bg-gray-900 border border-gray-800 animate-pulse" />
-          ))}
-        </div>
-      ) : sorted.length === 0 ? (
-        <p className="text-gray-500 text-sm">No community updates yet.</p>
-      ) : (
-        <div className="space-y-3">
-          {sorted.map(edit => (
-            <EditCard
-              key={edit.id}
-              edit={edit}
-              userId={user?.id ?? null}
-              isAdmin={isAdmin}
-              onVote={handleVote}
-              onApply={handleApply}
-              onReject={handleReject}
-            />
-          ))}
-        </div>
-      )}
+      <div className="mt-5">
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2].map(i => (
+              <div key={i} className="h-24 rounded-xl bg-gray-900 border border-gray-800 animate-pulse" />
+            ))}
+          </div>
+        ) : sorted.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-gray-800 bg-gray-900/40 px-6 py-10 text-center">
+            <p className="text-2xl mb-3">📝</p>
+            <p className="text-sm font-medium text-gray-300 mb-1">No community edits yet</p>
+            <p className="text-xs text-gray-500 mb-4">
+              Be the first to suggest an improvement to this page!
+            </p>
+            {!user && (
+              <a href="/auth/login" className="inline-block text-xs text-red-400 hover:text-red-300 transition-colors">
+                Log in to contribute →
+              </a>
+            )}
+            {user && (
+              <button
+                onClick={() => setShowModal(true)}
+                className="inline-block text-xs text-red-400 hover:text-red-300 transition-colors"
+              >
+                Write the first edit →
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {sorted.map(edit => (
+              <EditCard
+                key={edit.id}
+                edit={edit}
+                userId={user?.id ?? null}
+                isAdmin={isAdmin}
+                onVote={handleVote}
+                onApply={handleApply}
+                onReject={handleReject}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Submit modal */}
       {showModal && (

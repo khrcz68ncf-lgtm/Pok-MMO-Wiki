@@ -6,9 +6,10 @@ async function loginAction(formData: FormData) {
   const submitted = (formData.get('password') as string ?? '').trim();
   const expected  = (process.env.ADMIN_PASSWORD ?? '').trim();
 
-  console.log('[admin login] submitted length:', submitted.length);
-  console.log('[admin login] expected  length:', expected.length);
-  console.log('[admin login] match:', submitted === expected);
+  console.log('[admin login] env ADMIN_PASSWORD defined:', process.env.ADMIN_PASSWORD !== undefined);
+  console.log('[admin login] submitted (repr):', JSON.stringify(submitted));
+  console.log('[admin login] expected  (repr):', JSON.stringify(expected));
+  console.log('[admin login] match:', submitted === expected && expected !== '');
 
   if (submitted === expected && expected !== '') {
     const cookieStore = await cookies();
