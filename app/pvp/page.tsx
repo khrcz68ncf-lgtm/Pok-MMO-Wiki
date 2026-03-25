@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tier = 'S' | 'A' | 'B' | 'C' | 'D' | 'F';
+type Tier = 'Uber' | 'OU' | 'UU' | 'NU' | 'PU' | 'Untiered';
 type Role = 'Sweeper' | 'Tank' | 'Support' | 'Revenge Killer' | 'Wall' | 'Wallbreaker' | 'Pivot' | 'Hazard Setter';
 
 type TierEntry = {
@@ -28,16 +28,16 @@ type SearchResult = {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const TIERS: Tier[] = ['S', 'A', 'B', 'C', 'D', 'F'];
+const TIERS: Tier[] = ['Uber', 'OU', 'UU', 'NU', 'PU', 'Untiered'];
 const ROLES: Role[] = ['Sweeper', 'Tank', 'Support', 'Revenge Killer', 'Wall', 'Wallbreaker', 'Pivot', 'Hazard Setter'];
 
-const TIER_STYLES: Record<Tier, { bg: string; border: string; label: string; labelBg: string }> = {
-  S: { bg: 'bg-red-950/40',    border: 'border-red-800/50',    label: 'text-red-400',    labelBg: 'bg-red-900/60'    },
-  A: { bg: 'bg-orange-950/40', border: 'border-orange-800/50', label: 'text-orange-400', labelBg: 'bg-orange-900/60' },
-  B: { bg: 'bg-yellow-950/40', border: 'border-yellow-800/50', label: 'text-yellow-400', labelBg: 'bg-yellow-900/60' },
-  C: { bg: 'bg-green-950/40',  border: 'border-green-800/50',  label: 'text-green-400',  labelBg: 'bg-green-900/60'  },
-  D: { bg: 'bg-blue-950/40',   border: 'border-blue-800/50',   label: 'text-blue-400',   labelBg: 'bg-blue-900/60'   },
-  F: { bg: 'bg-gray-900/40',   border: 'border-gray-700/50',   label: 'text-gray-400',   labelBg: 'bg-gray-800/60'   },
+const TIER_STYLES: Record<Tier, { bg: string; border: string; label: string; labelBg: string; desc: string }> = {
+  Uber:     { bg: 'bg-red-950/40',    border: 'border-red-800/50',    label: 'text-red-400',    labelBg: 'bg-red-900/60',    desc: 'Banned / Legendary'  },
+  OU:       { bg: 'bg-orange-950/40', border: 'border-orange-800/50', label: 'text-orange-400', labelBg: 'bg-orange-900/60', desc: 'OverUsed — Standard'  },
+  UU:       { bg: 'bg-yellow-950/40', border: 'border-yellow-800/50', label: 'text-yellow-400', labelBg: 'bg-yellow-900/60', desc: 'UnderUsed'             },
+  NU:       { bg: 'bg-green-950/40',  border: 'border-green-800/50',  label: 'text-green-400',  labelBg: 'bg-green-900/60',  desc: 'NeverUsed'            },
+  PU:       { bg: 'bg-blue-950/40',   border: 'border-blue-800/50',   label: 'text-blue-400',   labelBg: 'bg-blue-900/60',   desc: 'PU — Rarely Used'    },
+  Untiered: { bg: 'bg-gray-900/40',   border: 'border-gray-700/50',   label: 'text-gray-400',   labelBg: 'bg-gray-800/60',   desc: 'Unclassified'        },
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -229,7 +229,7 @@ function AddPokemonRow({
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder={`+ Add to ${tier}`}
+        placeholder={`+ Add Pokémon…`}
         className="w-full text-xs bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-300 placeholder-gray-600 focus:outline-none focus:border-gray-500"
       />
       {open && results.length > 0 && (
@@ -305,7 +305,7 @@ export default function PvPPage() {
 
   const grouped = useCallback(() => {
     const display = editMode ? pending : entries;
-    const map: Record<Tier, TierEntry[]> = { S: [], A: [], B: [], C: [], D: [], F: [] };
+    const map: Record<Tier, TierEntry[]> = { Uber: [], OU: [], UU: [], NU: [], PU: [], Untiered: [] };
     for (const e of display) {
       if (e.tier in map) map[e.tier as Tier].push(e);
     }
@@ -433,34 +433,40 @@ export default function PvPPage() {
           )}
         </div>
 
-        {/* Tier list */}
-        {loading ? (
-          <div className="space-y-3">
-            {TIERS.map((t) => (
-              <div key={t} className="h-24 rounded-2xl bg-gray-900/40 border border-gray-800 animate-pulse" />
-            ))}
+        {/* Coming Soon */}
+        <div className="rounded-2xl border border-gray-800 bg-gray-900/60 p-10 text-center mb-6">
+          <div className="text-5xl mb-4">🏆</div>
+          <h2 className="text-xl font-bold text-white mb-2">The PvP Tier List is coming soon</h2>
+          <p className="text-gray-500 text-sm max-w-md mx-auto">
+            We&apos;re working on classifying all Pokémon with the community. Check back soon!
+          </p>
+          {/* Tier key preview */}
+          <div className="mt-8 flex flex-wrap justify-center gap-2">
+            {TIERS.map((tier) => {
+              const s = TIER_STYLES[tier];
+              return (
+                <div key={tier} className={`flex items-center gap-2 rounded-xl px-3 py-2 border ${s.bg} ${s.border}`}>
+                  <span className={`text-sm font-extrabold ${s.label}`}>{tier}</span>
+                  <span className="text-xs text-gray-600">{s.desc}</span>
+                </div>
+              );
+            })}
           </div>
-        ) : (
-          <div className="space-y-3">
+        </div>
+
+        {/* Admin edit mode — hidden tier rows, ready for when we add Pokémon */}
+        {editMode && (
+          <div className="space-y-3 mb-6">
             {TIERS.map((tier) => {
               const style = TIER_STYLES[tier];
               const pokemonInTier = tierMap[tier] ?? [];
               return (
-                <div
-                  key={tier}
-                  className={`rounded-2xl ${style.bg} border ${style.border} flex gap-0 overflow-hidden`}
-                >
-                  {/* Tier label */}
-                  <div className={`flex items-center justify-center ${style.labelBg} shrink-0 w-14 sm:w-16`}>
-                    <span className={`text-2xl font-extrabold ${style.label} select-none`}>{tier}</span>
+                <div key={tier} className={`rounded-2xl ${style.bg} border ${style.border} flex gap-0 overflow-hidden`}>
+                  <div className={`flex items-center justify-center ${style.labelBg} shrink-0 w-16 sm:w-20`}>
+                    <span className={`text-base font-extrabold ${style.label} select-none`}>{tier}</span>
                   </div>
-
-                  {/* Pokémon row */}
                   <div className="flex-1 min-w-0 p-3">
-                    <div className="flex gap-2 overflow-x-auto pb-1 items-start flex-wrap sm:flex-nowrap">
-                      {pokemonInTier.length === 0 && !editMode && (
-                        <p className="text-xs text-gray-700 italic self-center py-4">No Pokémon in this tier yet.</p>
-                      )}
+                    <div className="flex gap-2 overflow-x-auto pb-1 items-start flex-wrap">
                       {pokemonInTier.map((entry) => (
                         <PokemonCard
                           key={entry.id}
@@ -470,11 +476,9 @@ export default function PvPPage() {
                           onRemove={handleRemove}
                         />
                       ))}
-                      {editMode && (
-                        <div className="self-center shrink-0">
-                          <AddPokemonRow tier={tier} onAdd={handleAdd} />
-                        </div>
-                      )}
+                      <div className="self-center shrink-0">
+                        <AddPokemonRow tier={tier} onAdd={handleAdd} />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -482,15 +486,6 @@ export default function PvPPage() {
             })}
           </div>
         )}
-
-        {/* Legend */}
-        <div className="mt-6 flex flex-wrap gap-2">
-          {Object.entries(ROLE_COLORS).map(([role, cls]) => (
-            <span key={role} className={`text-[11px] px-2.5 py-1 rounded-full border font-medium ${cls}`}>
-              {role}
-            </span>
-          ))}
-        </div>
 
         {/* Divider */}
         <div className="mt-12 border-t border-gray-800 pt-10">
