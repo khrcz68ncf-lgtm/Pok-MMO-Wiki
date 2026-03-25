@@ -52,6 +52,12 @@ export default async function AdminDashboard({
           </div>
           <div className="flex items-center gap-4">
             <Link
+              href="/admin/community-updates"
+              className="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              Community Updates
+            </Link>
+            <Link
               href="/admin/categories"
               className="text-sm text-gray-400 hover:text-white transition-colors"
             >

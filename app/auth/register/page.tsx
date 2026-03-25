@@ -7,7 +7,8 @@ import { supabase } from '@/lib/supabase';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const [error,   setError]   = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const [pending, setPending] = useState(false);
   const passwordRef = useRef<HTMLInputElement>(null);
   const confirmRef  = useRef<HTMLInputElement>(null);
@@ -32,8 +33,14 @@ export default function RegisterPage() {
     const username = (formData.get('username') as string).trim();
     const email    = (formData.get('email')    as string).trim();
 
-    // Step 1 — Create auth user.
-    const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username },
+        emailRedirectTo: 'https://pok-mmo-wiki.vercel.app/auth/confirm',
+      },
+    });
 
     if (signUpError || !data.user) {
       setError('Something went wrong, please try again.');
@@ -41,20 +48,39 @@ export default function RegisterPage() {
       return;
     }
 
-    // Step 2 — Insert profile.
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({ id: data.user.id, username });
-
-    if (profileError) {
-      setError('Something went wrong, please try again.');
+    // No session means email confirmation is required — show success message
+    if (!data.session) {
+      setSuccess(true);
       setPending(false);
       return;
     }
 
-    // Step 3 — Redirect home.
-    router.push('/');
+    // Session exists (email confirmation disabled) — go home directly
     router.refresh();
+    router.push('/');
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-sm text-center">
+          <Link href="/" className="text-red-400 font-bold text-lg">PokéMMO Wiki</Link>
+          <div className="mt-8 rounded-xl bg-green-500/10 border border-green-500/30 px-6 py-8">
+            <p className="text-3xl mb-3">📬</p>
+            <h2 className="text-lg font-bold text-green-400 mb-2">Check your email</h2>
+            <p className="text-sm text-gray-300">
+              Account created! Please check your email to confirm your account.
+            </p>
+          </div>
+          <p className="text-center text-sm text-gray-500 mt-5">
+            Already confirmed?{' '}
+            <Link href="/auth/login" className="text-red-400 hover:text-red-300 transition-colors">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

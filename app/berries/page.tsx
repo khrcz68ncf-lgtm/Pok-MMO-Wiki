@@ -23,6 +23,11 @@ type Berry = {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+const SEED_LABEL: Record<SeedColor, string> = {
+  spicy: 'Spicy', sweet: 'Sweet', bitter: 'Bitter', sour: 'Sour', dry: 'Dry',
+};
+
+// Fallback dot colors for legend / error states
 const SEED_DOT: Record<SeedColor, string> = {
   spicy:  'bg-orange-500',
   sweet:  'bg-pink-500',
@@ -31,9 +36,9 @@ const SEED_DOT: Record<SeedColor, string> = {
   dry:    'bg-blue-500',
 };
 
-const SEED_LABEL: Record<SeedColor, string> = {
-  spicy: 'Spicy', sweet: 'Sweet', bitter: 'Bitter', sour: 'Sour', dry: 'Dry',
-};
+function seedImg(color: SeedColor, type: 'plain' | 'very'): string {
+  return `/seeds/${type}-${color}.png`;
+}
 
 const GROWTH_BADGE: Record<number, string> = {
   16: 'bg-green-900/60 text-green-400 border-green-700/50',
@@ -64,7 +69,11 @@ const MAX_PLOTS = 289;
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function berryImg(name_en: string) {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${name_en.toLowerCase().replace(/ /g, '-')}-berry.png`;
+  // "Cheri Berry" → "cheri-berry", "Razz Berry" → "razz-berry"
+  const slug = name_en.toLowerCase().replace(/\s+/g, '-');
+  // Strip trailing "-berry" if already present, then append it
+  const base = slug.endsWith('-berry') ? slug : `${slug}-berry`;
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${base}.png`;
 }
 
 function formatCountdown(ms: number): string {
@@ -90,25 +99,46 @@ function fmtDate(d: Date) {
 
 // ─── Tiny shared components ───────────────────────────────────────────────────
 
-function SeedDots({ seeds }: { seeds: Seed[] }) {
+function SeedDisplay({ seeds }: { seeds: Seed[] }) {
   if (!seeds?.length) return <span className="text-gray-600 text-xs">—</span>;
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex flex-wrap gap-2">
       {seeds.map((seed, i) => (
         <span
           key={i}
-          className="flex items-center gap-0.5"
-          title={`${seed.amount}× ${SEED_LABEL[seed.color]}${seed.type === 'very' ? ' (Very)' : ''}`}
+          className="flex items-center gap-1"
+          title={`${seed.amount}× ${seed.type === 'very' ? 'Very ' : ''}${SEED_LABEL[seed.color]} Seed`}
         >
-          {Array.from({ length: seed.amount }).map((_, j) => (
-            <span
-              key={j}
-              className={`inline-block w-2.5 h-2.5 rounded-full ${SEED_DOT[seed.color]} ${seed.type === 'very' ? 'ring-1 ring-white/40' : ''}`}
-            />
-          ))}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={seedImg(seed.color, seed.type)}
+            alt={`${seed.type} ${seed.color} seed`}
+            className="h-6 w-6 object-contain inline-block"
+          />
+          <span className="text-xs text-gray-400 font-mono">x{seed.amount}</span>
         </span>
       ))}
     </div>
+  );
+}
+
+function BerrySprite({ name_en }: { name_en: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <div className="w-8 h-8 rounded-full bg-green-900/60 border border-green-700/40 flex items-center justify-center text-green-400 font-bold text-sm shrink-0 select-none">
+        {name_en.charAt(0).toUpperCase()}
+      </div>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={berryImg(name_en)}
+      alt={name_en}
+      className="w-8 h-8 object-contain shrink-0"
+      onError={() => setFailed(true)}
+    />
   );
 }
 
@@ -282,11 +312,14 @@ function BerryGuide({ berries, isAdmin, onUpdate }: { berries: Berry[]; isAdmin:
         )}
       </div>
 
-      {/* Seed color legend */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {(Object.entries(SEED_DOT) as [SeedColor, string][]).map(([color, cls]) => (
+      {/* Seed legend */}
+      <div className="flex flex-wrap gap-3 mb-4">
+        {(Object.keys(SEED_LABEL) as SeedColor[]).map(color => (
           <span key={color} className="flex items-center gap-1.5 text-xs text-gray-500">
-            <span className={`inline-block w-2.5 h-2.5 rounded-full ${cls}`} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={seedImg(color, 'plain')} alt="" className="h-5 w-5 object-contain" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={seedImg(color, 'very')}  alt="" className="h-5 w-5 object-contain" />
             {SEED_LABEL[color]}
           </span>
         ))}
@@ -315,13 +348,7 @@ function BerryGuide({ berries, isAdmin, onUpdate }: { berries: Berry[]; isAdmin:
                     {/* Name + sprite */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={berryImg(berry.name_en)}
-                          alt={berry.name_en}
-                          className="w-8 h-8 object-contain shrink-0"
-                          onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }}
-                        />
+                        <BerrySprite name_en={berry.name_en} />
                         <div>
                           <p className="font-semibold text-gray-200 leading-tight">{berry.name_en}</p>
                           <p className="text-xs text-gray-500">{berry.name_fr}</p>
@@ -340,7 +367,7 @@ function BerryGuide({ berries, isAdmin, onUpdate }: { berries: Berry[]; isAdmin:
                     </td>
                     {/* Seeds */}
                     <td className="px-4 py-3">
-                      <SeedDots seeds={berry.seeds} />
+                      <SeedDisplay seeds={berry.seeds} />
                     </td>
                     {/* Waterings */}
                     <td className="px-4 py-3 text-center">

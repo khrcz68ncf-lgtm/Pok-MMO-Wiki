@@ -73,9 +73,12 @@ export default function TeamBuilderPage() {
   const [activeTeamId,   setActiveTeamId]   = useState<string | null>(null);
   const [pokemonByTeam,  setPokemonByTeam]  = useState<Record<string, TeamPokemon[]>>({});
   const [selectedSlot,   setSelectedSlot]   = useState<number | null>(null);
-  const [showSearch,    setShowSearch]    = useState(false);
-  const [showImport,    setShowImport]    = useState(false);
-  const [importText,    setImportText]    = useState('');
+  const [showSearch,      setShowSearch]      = useState(false);
+  const [showImport,      setShowImport]      = useState(false);
+  const [importText,      setImportText]      = useState('');
+  const [showImportCode,  setShowImportCode]  = useState(false);
+  const [importCode,      setImportCode]      = useState('');
+  const [importCodeErr,   setImportCodeErr]   = useState('');
   const [loading,       setLoading]       = useState(true);
   const [saving,        setSaving]        = useState(false);
   const [userId,        setUserId]        = useState<string | null>(null);
@@ -275,10 +278,17 @@ export default function TeamBuilderPage() {
 
   async function exportPng() {
     if (!exportRef.current) return;
+    // Wait for images to settle before capture
+    await new Promise(res => setTimeout(res, 500));
     const { default: html2canvas } = await import('html2canvas');
-    const canvas = await html2canvas(exportRef.current, { useCORS: true, backgroundColor: '#030712' });
+    const canvas = await html2canvas(exportRef.current, {
+      useCORS:         true,
+      allowTaint:      true,
+      backgroundColor: '#030712',
+      scale:           2,
+    });
     const link = document.createElement('a');
-    link.download = `${activeTeam?.name ?? 'team'}.png`;
+    link.download = `team-${(activeTeam?.name ?? 'team').replace(/\s+/g, '-').toLowerCase()}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   }
@@ -347,6 +357,63 @@ export default function TeamBuilderPage() {
     setActiveTeamId(newTeam.id);
   }
 
+  // ── Import team by share code ────────────────────────────────────────────
+
+  async function importByCode() {
+    if (!userId || !importCode.trim()) return;
+    setImportCodeErr('');
+    const code = importCode.trim().toUpperCase();
+
+    const { data: srcTeam } = await supabase
+      .from('teams')
+      .select('*')
+      .eq('share_code', code)
+      .single();
+
+    if (!srcTeam) {
+      setImportCodeErr('Team not found. Check the code and try again.');
+      return;
+    }
+
+    const newCode = generateShareCode();
+    const { data: newTeam } = await supabase
+      .from('teams')
+      .insert({
+        user_id:     userId,
+        name:        `${srcTeam.name} (imported)`,
+        description: srcTeam.description,
+        price:       srcTeam.price,
+        tags:        srcTeam.tags,
+        share_code:  newCode,
+      })
+      .select()
+      .single();
+
+    if (!newTeam) { setImportCodeErr('Failed to create team.'); return; }
+
+    const { data: srcPokemon } = await supabase
+      .from('team_pokemon')
+      .select('*')
+      .eq('team_id', srcTeam.id)
+      .order('slot');
+
+    if (srcPokemon && srcPokemon.length > 0) {
+      await supabase.from('team_pokemon').insert(
+        srcPokemon.map(({ id: _id, team_id: _tid, ...rest }) => ({ ...rest, team_id: newTeam.id }))
+      );
+    }
+
+    // Pre-populate cache
+    const filled: TeamPokemon[] = Array.from({ length: 6 }, (_, i) =>
+      (srcPokemon ?? []).find(p => p.slot === i + 1) ?? emptySlot(newTeam.id, i + 1)
+    );
+    setPokemonByTeam(prev => ({ ...prev, [newTeam.id]: filled }));
+    setTeams(prev => [newTeam, ...prev]);
+    setActiveTeamId(newTeam.id);
+    setShowImportCode(false);
+    setImportCode('');
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const selectedPokemon = selectedSlot !== null ? teamPokemon[selectedSlot - 1] ?? null : null;
@@ -370,6 +437,14 @@ export default function TeamBuilderPage() {
               title="New team"
             >
               <Plus size={14} />
+            </button>
+          </div>
+          <div className="px-3 py-2 border-b border-gray-800">
+            <button
+              onClick={() => { setShowImportCode(true); setImportCodeErr(''); setImportCode(''); }}
+              className="w-full flex items-center justify-center gap-1.5 text-xs text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg py-1.5 transition-colors"
+            >
+              <Upload size={12} /> Import by Code
             </button>
           </div>
 
@@ -579,7 +654,7 @@ export default function TeamBuilderPage() {
               </div>
 
               {/* Pokemon grid — export ref */}
-              <div ref={exportRef} className="grid grid-cols-6 gap-3 p-4 bg-gray-950">
+              <div ref={exportRef} className="grid grid-cols-6 gap-3 p-4 bg-gray-900">
                 {teamPokemon.map((p, i) => (
                   <button
                     key={p.id}
@@ -657,6 +732,34 @@ export default function TeamBuilderPage() {
           onSelect={r => addPokemon(r, selectedSlot)}
           onClose={() => setShowSearch(false)}
         />
+      )}
+
+      {showImportCode && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-sm bg-gray-900 rounded-2xl border border-gray-700 shadow-2xl p-6">
+            <h3 className="font-bold text-white mb-1">Import Team by Code</h3>
+            <p className="text-xs text-gray-500 mb-4">Enter a share code to copy someone's team into your account.</p>
+            <input
+              value={importCode}
+              onChange={e => { setImportCode(e.target.value.toUpperCase()); setImportCodeErr(''); }}
+              onKeyDown={e => e.key === 'Enter' && importByCode()}
+              placeholder="XXXX-XXXX-XXXX"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white font-mono tracking-widest focus:outline-none focus:border-red-500 placeholder-gray-600 mb-2"
+              maxLength={14}
+            />
+            {importCodeErr && (
+              <p className="text-xs text-red-400 mb-2">{importCodeErr}</p>
+            )}
+            <div className="flex gap-2 mt-2">
+              <button onClick={importByCode} className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-semibold transition-colors">
+                Import
+              </button>
+              <button onClick={() => { setShowImportCode(false); setImportCode(''); setImportCodeErr(''); }} className="flex-1 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm transition-colors">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {showImport && (

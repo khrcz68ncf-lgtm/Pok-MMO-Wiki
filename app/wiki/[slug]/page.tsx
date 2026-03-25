@@ -5,8 +5,11 @@ import Link from 'next/link';
 import MarkdownContent from './MarkdownContent';
 import PokemonTemplate from './PokemonTemplate';
 import MoveTemplate from './MoveTemplate';
+import ItemTemplate from './ItemTemplate';
+import AbilityTemplate from './AbilityTemplate';
 import Navbar from '@/app/components/Navbar';
 import Breadcrumb from '@/app/components/Breadcrumb';
+import CommunityUpdates from './CommunityUpdates';
 
 function stripMarkdown(md: string): string {
   return md
@@ -39,6 +42,11 @@ export async function generateMetadata(
     const cat = page.metadata.category ?? '';
     const pwr = page.metadata.power ? `, power ${page.metadata.power}` : '';
     description = `${page.title} — ${cat} move${pwr}. Full details for PokéMMO.`;
+  } else if (page.template_type === 'item' && page.metadata) {
+    const cat = page.metadata.category ? ` (${page.metadata.category})` : '';
+    description = `${page.title}${cat} — item details for PokéMMO.`;
+  } else if (page.template_type === 'ability' && page.metadata?.effect) {
+    description = `${page.title}: ${(page.metadata.effect as string).slice(0, 140)}`;
   } else {
     description = stripMarkdown(page.content ?? '').slice(0, 160);
   }
@@ -74,41 +82,150 @@ export default async function WikiPage({
 
   const isPokemon = page.template_type === 'pokemon';
   const isMove    = page.template_type === 'move';
+  const isItem    = page.template_type === 'item';
+  const isAbility = page.template_type === 'ability';
 
-  // Enrich Pokémon moves with type/damage_class from move pages
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let pageData: any = page;
-  if (isPokemon && Array.isArray(page.metadata?.moves) && page.metadata.moves.length > 0) {
-    const moveSlugs = [
-      ...new Set<string>(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        page.metadata.moves.map((m: any) => m.name.toLowerCase().replace(/\s+/g, '-'))
-      ),
-    ];
 
-    const { data: movePages } = await supabase
-      .from('pages')
-      .select('slug, metadata')
-      .in('slug', moveSlugs)
-      .eq('template_type', 'move');
+  // ── Pokémon enrichment ────────────────────────────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let evolutionChain: any[] = [];
+  let evolutionPokemonMap: Record<string, number> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let eggMovesData: any[] = [];
 
-    const moveTypes: Record<string, { type?: string; damage_class?: string; power?: number; accuracy?: number; pp?: number }> = {};
-    for (const mp of movePages ?? []) {
-      moveTypes[mp.slug] = {
-        type:         mp.metadata?.type     ?? undefined,
-        damage_class: mp.metadata?.category ?? undefined,
-        power:        mp.metadata?.power    ?? undefined,
-        accuracy:     mp.metadata?.accuracy ?? undefined,
-        pp:           mp.metadata?.pp       ?? undefined,
-      };
+  if (isPokemon) {
+    // Enrich regular moves
+    if (Array.isArray(page.metadata?.moves) && page.metadata.moves.length > 0) {
+      const moveSlugs = [
+        ...new Set<string>(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          page.metadata.moves.map((m: any) => m.name.toLowerCase().replace(/\s+/g, '-'))
+        ),
+      ];
+
+      const { data: movePages } = await supabase
+        .from('pages')
+        .select('slug, metadata')
+        .in('slug', moveSlugs)
+        .eq('template_type', 'move');
+
+      const moveTypes: Record<string, { type?: string; damage_class?: string; power?: number; accuracy?: number; pp?: number }> = {};
+      for (const mp of movePages ?? []) {
+        moveTypes[mp.slug] = {
+          type:         mp.metadata?.type     ?? undefined,
+          damage_class: mp.metadata?.category ?? undefined,
+          power:        mp.metadata?.power    ?? undefined,
+          accuracy:     mp.metadata?.accuracy ?? undefined,
+          pp:           mp.metadata?.pp       ?? undefined,
+        };
+      }
+
+      const enrichedMoves = page.metadata.moves.map((m: { name: string }) => {
+        const moveSlug = m.name.toLowerCase().replace(/\s+/g, '-');
+        return { ...m, ...moveTypes[moveSlug] };
+      });
+
+      pageData = { ...page, metadata: { ...page.metadata, moves: enrichedMoves } };
     }
 
-    const enrichedMoves = page.metadata.moves.map((m: { name: string }) => {
-      const moveSlug = m.name.toLowerCase().replace(/\s+/g, '-');
-      return { ...m, ...moveTypes[moveSlug] };
-    });
+    // Fetch evolution chain
+    const chainId = page.metadata?.evolution_chain_id;
+    if (chainId) {
+      const { data: chainRows } = await supabase
+        .from('evolution_chains')
+        .select('from_pokemon, to_pokemon, min_level, item, trigger, condition')
+        .eq('chain_id', chainId);
 
-    pageData = { ...page, metadata: { ...page.metadata, moves: enrichedMoves } };
+      if (chainRows && chainRows.length > 0) {
+        evolutionChain = chainRows;
+
+        // Gather all unique pokemon names and look up their IDs
+        const names = [...new Set([
+          ...chainRows.map((r: { from_pokemon: string }) => r.from_pokemon),
+          ...chainRows.map((r: { to_pokemon: string }) => r.to_pokemon),
+        ])];
+
+        const { data: pokemonPages } = await supabase
+          .from('pages')
+          .select('slug, metadata')
+          .in('slug', names)
+          .eq('template_type', 'pokemon');
+
+        for (const pp of pokemonPages ?? []) {
+          if (pp.metadata?.pokemon_id) {
+            evolutionPokemonMap[pp.slug] = pp.metadata.pokemon_id;
+          }
+        }
+      }
+    }
+
+    // Enrich egg moves
+    const eggMoveNames: string[] = page.metadata?.egg_moves ?? [];
+    if (eggMoveNames.length > 0) {
+      const eggMoveSlugs = eggMoveNames.map((n: string) => n.toLowerCase().replace(/\s+/g, '-'));
+      const { data: eggMovePages } = await supabase
+        .from('pages')
+        .select('slug, metadata')
+        .in('slug', eggMoveSlugs)
+        .eq('template_type', 'move');
+
+      const eggMoveTypes: Record<string, { type?: string; damage_class?: string; power?: number; accuracy?: number; pp?: number }> = {};
+      for (const mp of eggMovePages ?? []) {
+        eggMoveTypes[mp.slug] = {
+          type:         mp.metadata?.type     ?? undefined,
+          damage_class: mp.metadata?.category ?? undefined,
+          power:        mp.metadata?.power    ?? undefined,
+          accuracy:     mp.metadata?.accuracy ?? undefined,
+          pp:           mp.metadata?.pp       ?? undefined,
+        };
+      }
+
+      eggMovesData = eggMoveNames.map((name: string) => {
+        const slug = name.toLowerCase().replace(/\s+/g, '-');
+        return { name, ...eggMoveTypes[slug] };
+      });
+    }
+  }
+
+  // ── Item: build pokemonMap for held_by_pokemon ────────────────────────────
+  let itemPokemonMap: Record<string, number> = {};
+  if (isItem) {
+    const heldBy: { pokemon_name: string }[] = page.metadata?.held_by_pokemon ?? [];
+    if (heldBy.length > 0) {
+      const names = heldBy.map((h: { pokemon_name: string }) => h.pokemon_name);
+      const { data: pokemonPages } = await supabase
+        .from('pages')
+        .select('slug, metadata')
+        .in('slug', names)
+        .eq('template_type', 'pokemon');
+      for (const pp of pokemonPages ?? []) {
+        if (pp.metadata?.pokemon_id) {
+          itemPokemonMap[pp.slug] = pp.metadata.pokemon_id;
+        }
+      }
+    }
+  }
+
+  // ── Ability: build pokemonMap ─────────────────────────────────────────────
+  let abilityPokemonMap: Record<string, number> = {};
+  if (isAbility) {
+    const abilityPokemon: { name: string }[] = page.metadata?.pokemon ?? [];
+    if (abilityPokemon.length > 0) {
+      // Only Gen 1-5 (pokemon_id <= 649); fetch in batches of 100 names
+      const names = abilityPokemon.slice(0, 100).map((p: { name: string }) => p.name);
+      const { data: pokemonPages } = await supabase
+        .from('pages')
+        .select('slug, metadata')
+        .in('slug', names)
+        .eq('template_type', 'pokemon');
+      for (const pp of pokemonPages ?? []) {
+        if (pp.metadata?.pokemon_id && pp.metadata.pokemon_id <= 649) {
+          abilityPokemonMap[pp.slug] = pp.metadata.pokemon_id;
+        }
+      }
+    }
   }
 
   return (
@@ -124,10 +241,33 @@ export default async function WikiPage({
 
         {isPokemon ? (
           // ── Pokémon template ──────────────────────────────────────────────
-          <PokemonTemplate page={pageData} />
+          <>
+            <PokemonTemplate
+              page={pageData}
+              evolutionChain={evolutionChain.length > 0 ? evolutionChain : undefined}
+              evolutionPokemonMap={evolutionPokemonMap}
+              eggMovesData={eggMovesData.length > 0 ? eggMovesData : undefined}
+            />
+            <CommunityUpdates pageSlug={slug} pageTitle={page.title} />
+          </>
         ) : isMove ? (
           // ── Move template ─────────────────────────────────────────────────
-          <MoveTemplate page={pageData} slug={slug} />
+          <>
+            <MoveTemplate page={pageData} slug={slug} />
+            <CommunityUpdates pageSlug={slug} pageTitle={page.title} />
+          </>
+        ) : isItem ? (
+          // ── Item template ─────────────────────────────────────────────────
+          <>
+            <ItemTemplate page={pageData} pokemonMap={itemPokemonMap} />
+            <CommunityUpdates pageSlug={slug} pageTitle={page.title} />
+          </>
+        ) : isAbility ? (
+          // ── Ability template ──────────────────────────────────────────────
+          <>
+            <AbilityTemplate page={pageData} pokemonMap={abilityPokemonMap} />
+            <CommunityUpdates pageSlug={slug} pageTitle={page.title} />
+          </>
         ) : (
           // ── Free markdown template ────────────────────────────────────────
           <div className="flex gap-10">
@@ -143,10 +283,7 @@ export default async function WikiPage({
               <div className="prose-invert">
                 <MarkdownContent content={page.content} />
               </div>
-              <section className="mt-16 border-t border-gray-800 pt-10">
-                <h2 className="text-2xl font-semibold mb-4">Community Updates</h2>
-                <p className="text-gray-500 text-sm">No community updates yet.</p>
-              </section>
+              <CommunityUpdates pageSlug={slug} pageTitle={page.title} />
             </main>
 
             <aside className="w-56 shrink-0 hidden lg:block">
