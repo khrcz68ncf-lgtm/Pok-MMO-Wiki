@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, forwardRef } from 'react';
 import Navbar from '@/app/components/Navbar';
 import { supabase } from '@/lib/supabase';
 import { Team, TeamPokemon } from './types';
@@ -66,6 +66,193 @@ function SpriteOrDot({ pokemon, size = 48 }: { pokemon: TeamPokemon; size?: numb
   );
 }
 
+// ── Export Card ──────────────────────────────────────────────────────────────
+
+const TYPE_BG: Record<string, string> = {
+  normal: '#9099A1',   fire: '#E8553D',    water: '#4D90D5',   electric: '#F3D23B',
+  grass: '#63BB5B',    ice: '#74CEC0',     fighting: '#CE4069', poison: '#AB6AC8',
+  ground: '#D97845',   flying: '#8FA8DD',  psychic: '#F97176', bug: '#90C12C',
+  rock: '#C7B78B',     ghost: '#5269AC',   dragon: '#0A6DC4',  dark: '#5A5366',
+  steel: '#5A8EA1',    fairy: '#EC8FE6',
+};
+
+const EV_LABELS: Record<string, string> = {
+  hp: 'HP', attack: 'Atk', defense: 'Def',
+  special_attack: 'SpAtk', special_defense: 'SpDef', speed: 'Spe',
+};
+
+function fmtEvs(evs: Record<string, number>): string {
+  const parts = Object.entries(evs)
+    .filter(([, v]) => v > 0)
+    .map(([k, v]) => `${v} ${EV_LABELS[k] ?? k}`);
+  return parts.length ? parts.join(' / ') : '—';
+}
+
+const ExportCard = forwardRef<HTMLDivElement, {
+  team:     Team;
+  pokemon:  TeamPokemon[];
+  typesMap: Record<string, string[]>;
+}>(function ExportCard({ team, pokemon, typesMap }, ref) {
+  const filled  = pokemon.filter(p => p.pokemon_name && p.pokemon_id);
+  const empties = Array.from({ length: Math.max(0, 6 - filled.length) });
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        position:   'fixed',
+        left:       '-9999px',
+        top:        0,
+        width:      '1200px',
+        background: 'linear-gradient(135deg, #111827 0%, #1f2937 100%)',
+        padding:    '40px',
+        fontFamily: 'system-ui, sans-serif',
+        color:      '#fff',
+      }}
+    >
+      {/* Team name */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.5px', color: '#fff' }}>
+          {team.name}
+        </div>
+        {team.description && (
+          <div style={{ fontSize: 13, color: '#9ca3af', marginTop: 4 }}>{team.description}</div>
+        )}
+      </div>
+
+      {/* 6 cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        {filled.map(p => {
+          const base    = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork';
+          const artUrl  = p.is_shiny
+            ? `${base}/shiny/${p.pokemon_id}.png`
+            : `${base}/${p.pokemon_id}.png`;
+          const types   = (p.pokemon_slug ? typesMap[p.pokemon_slug] : null) ?? [];
+          const moves   = (p.moves ?? []).slice(0, 4);
+
+          return (
+            <div
+              key={p.id}
+              style={{
+                background:   'rgba(255,255,255,0.05)',
+                border:       '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 16,
+                padding:      '20px 20px 16px',
+                display:      'flex',
+                flexDirection:'column',
+                gap:          8,
+              }}
+            >
+              {/* Artwork + name row */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={artUrl}
+                  alt={p.pokemon_name ?? ''}
+                  crossOrigin="anonymous"
+                  style={{ width: 80, height: 80, objectFit: 'contain', imageRendering: 'auto' }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, textTransform: 'capitalize', marginBottom: 4 }}>
+                    {p.pokemon_name?.replace(/-/g, ' ')}
+                    {p.is_shiny && <span style={{ fontSize: 12, marginLeft: 6, color: '#fbbf24' }}>✨</span>}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 6 }}>
+                    Lv. {p.level} · {p.nature}
+                  </div>
+                  {/* Type badges */}
+                  {types.length > 0 && (
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {types.map(t => (
+                        <span
+                          key={t}
+                          style={{
+                            background:   TYPE_BG[t.toLowerCase()] ?? '#6b7280',
+                            borderRadius: 4,
+                            padding:      '2px 8px',
+                            fontSize:     11,
+                            fontWeight:   600,
+                            textTransform:'capitalize',
+                            color:        '#fff',
+                          }}
+                        >
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Held item */}
+              {p.held_item && (
+                <div style={{ fontSize: 12, color: '#d1d5db' }}>
+                  <span style={{ color: '#fbbf24' }}>@ </span>
+                  <span style={{ textTransform: 'capitalize' }}>{p.held_item.replace(/-/g, ' ')}</span>
+                </div>
+              )}
+
+              {/* Moves */}
+              {moves.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  {moves.map((m, i) => (
+                    <div key={i} style={{
+                      fontSize:     12,
+                      color:        '#e5e7eb',
+                      background:   'rgba(255,255,255,0.06)',
+                      borderRadius: 6,
+                      padding:      '3px 8px',
+                      textTransform:'capitalize',
+                    }}>
+                      — {m.replace(/-/g, ' ')}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* EV spread */}
+              <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
+                {fmtEvs(p.evs ?? {})}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Empty slot placeholders */}
+        {empties.map((_, i) => (
+          <div
+            key={`empty-${i}`}
+            style={{
+              background:   'rgba(255,255,255,0.02)',
+              border:       '1px dashed rgba(255,255,255,0.08)',
+              borderRadius: 16,
+              height:       200,
+              display:      'flex',
+              alignItems:   'center',
+              justifyContent:'center',
+              color:        '#374151',
+              fontSize:     13,
+            }}
+          >
+            Empty slot
+          </div>
+        ))}
+      </div>
+
+      {/* Watermark */}
+      <div style={{
+        marginTop:  28,
+        textAlign:  'center',
+        fontSize:   12,
+        color:      '#374151',
+        letterSpacing: '0.05em',
+      }}>
+        pokemmo-wiki.vercel.app
+      </div>
+    </div>
+  );
+});
+
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function TeamBuilderPage() {
@@ -83,13 +270,16 @@ export default function TeamBuilderPage() {
   const [saving,        setSaving]        = useState(false);
   const [userId,        setUserId]        = useState<string | null>(null);
   const [shareMsg,      setShareMsg]      = useState('');
+  const [exportLoading, setExportLoading] = useState(false);
+  const [exportTypesMap, setExportTypesMap] = useState<Record<string, string[]>>({});
   const [editingName,   setEditingName]   = useState(false);
   const [teamName,      setTeamName]      = useState('');
   const [teamDesc,      setTeamDesc]      = useState('');
   const [teamPrice,     setTeamPrice]     = useState('');
   const [teamTags,      setTeamTags]      = useState<string[]>([]);
   const [showTagDrop,   setShowTagDrop]   = useState(false);
-  const exportRef = useRef<HTMLDivElement>(null);
+  const exportRef     = useRef<HTMLDivElement>(null);
+  const exportCardRef = useRef<HTMLDivElement>(null);
 
   // Derived view of the active team's Pokémon — all read sites stay unchanged
   const teamPokemon: TeamPokemon[] = activeTeamId ? (pokemonByTeam[activeTeamId] ?? []) : [];
@@ -299,20 +489,41 @@ export default function TeamBuilderPage() {
   // ── Export PNG ────────────────────────────────────────────────────────────
 
   async function exportPng() {
-    if (!exportRef.current) return;
-    // Wait for images to settle before capture
-    await new Promise(res => setTimeout(res, 500));
+    if (!exportCardRef.current || !activeTeam) return;
+    setExportLoading(true);
+
+    // Fetch types for all pokemon in the team
+    const slugs = teamPokemon.map(p => p.pokemon_slug).filter(Boolean) as string[];
+    if (slugs.length > 0) {
+      const { data: pages } = await supabase
+        .from('pages')
+        .select('slug, metadata')
+        .in('slug', slugs)
+        .eq('template_type', 'pokemon');
+      const map: Record<string, string[]> = {};
+      for (const page of pages ?? []) {
+        if (page.metadata?.types) map[page.slug] = page.metadata.types;
+      }
+      setExportTypesMap(map);
+    }
+
+    // Wait for re-render + all images to load
+    await new Promise(res => setTimeout(res, 800));
+
     const { default: html2canvas } = await import('html2canvas');
-    const canvas = await html2canvas(exportRef.current, {
+    const canvas = await html2canvas(exportCardRef.current, {
       useCORS:         true,
-      allowTaint:      true,
-      backgroundColor: '#030712',
+      allowTaint:      false,
+      backgroundColor: '#111827',
       scale:           2,
+      logging:         false,
     });
     const link = document.createElement('a');
-    link.download = `team-${(activeTeam?.name ?? 'team').replace(/\s+/g, '-').toLowerCase()}.png`;
+    link.download = `team-${activeTeam.name.replace(/\s+/g, '-').toLowerCase()}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
+
+    setExportLoading(false);
   }
 
   // ── Export text ───────────────────────────────────────────────────────────
@@ -632,8 +843,13 @@ export default function TeamBuilderPage() {
                     <Share2 size={12} />
                     {shareMsg || 'Share'}
                   </button>
-                  <button onClick={exportPng} className="flex items-center gap-1 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-400 hover:text-white transition-colors" title="Export PNG">
-                    <Download size={12} />PNG
+                  <button
+                    onClick={exportPng}
+                    disabled={exportLoading}
+                    className="flex items-center gap-1 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-400 hover:text-white disabled:opacity-50 transition-colors"
+                    title="Export PNG"
+                  >
+                    <Download size={12} />{exportLoading ? 'Exporting…' : 'PNG'}
                   </button>
                   <button onClick={copyExportText} className="flex items-center gap-1 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-400 hover:text-white transition-colors" title="Export text">
                     <FileText size={12} />Text
@@ -741,6 +957,16 @@ export default function TeamBuilderPage() {
           </div>
         </aside>
       </div>
+
+      {/* ── Off-screen Export Card ─────────────────────────────────────────── */}
+      {activeTeam && (
+        <ExportCard
+          ref={exportCardRef}
+          team={activeTeam}
+          pokemon={teamPokemon}
+          typesMap={exportTypesMap}
+        />
+      )}
 
       {/* ── Modals ─────────────────────────────────────────────────────────── */}
 

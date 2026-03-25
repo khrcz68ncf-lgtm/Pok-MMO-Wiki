@@ -3,17 +3,25 @@ import { redirect } from 'next/navigation';
 
 async function loginAction(formData: FormData) {
   'use server';
-  const password = formData.get('password') as string;
-  if (password === process.env.ADMIN_PASSWORD) {
+  const submitted = (formData.get('password') as string ?? '').trim();
+  const expected  = (process.env.ADMIN_PASSWORD ?? '').trim();
+
+  console.log('[admin login] submitted length:', submitted.length);
+  console.log('[admin login] expected  length:', expected.length);
+  console.log('[admin login] match:', submitted === expected);
+
+  if (submitted === expected && expected !== '') {
     const cookieStore = await cookies();
-    cookieStore.set('ADMIN_SECRET', password, {
+    cookieStore.set('ADMIN_SECRET', expected, {
       httpOnly: true,
       sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 8, // 8 hours
+      path:     '/',
+      maxAge:   60 * 60 * 8, // 8 hours
     });
+    console.log('[admin login] cookie set, redirecting to /admin');
     redirect('/admin');
   } else {
+    console.log('[admin login] password mismatch, redirecting to error');
     redirect('/admin/login?error=1');
   }
 }

@@ -68,7 +68,7 @@ export default function TeamAnalysis({ pokemon }: Props) {
   // Since we don't store types on TeamPokemon, we'll show a stat summary + warnings
 
   const totalEVsUsed = filled.map(p => Object.values(p.evs).reduce((a, b) => a + b, 0));
-  const evWarnings   = filled.filter((p, i) => totalEVsUsed[i] > 508);
+  const evWarnings   = filled.filter((p, i) => totalEVsUsed[i] > 510);
   const duplicates   = filled.filter((p, i) => filled.findIndex(q => q.pokemon_name === p.pokemon_name) !== i);
   const noMoves      = filled.filter(p => !p.moves?.some(Boolean));
   const allShiny     = filled.length >= 6 && filled.every(p => p.is_shiny);
@@ -101,7 +101,7 @@ export default function TeamAnalysis({ pokemon }: Props) {
           <div className="text-sm font-semibold text-yellow-400 mb-2">⚠ Warnings</div>
           <ul className="space-y-1 text-xs text-yellow-300">
             {evWarnings.map(p => (
-              <li key={p.id}>• {p.pokemon_name}: EVs exceed 508</li>
+              <li key={p.id}>• {p.pokemon_name}: EVs exceed 510</li>
             ))}
             {duplicates.map(p => (
               <li key={p.id}>• {p.pokemon_name} appears more than once</li>
@@ -155,11 +155,11 @@ export default function TeamAnalysis({ pokemon }: Props) {
                 <span className="text-xs text-gray-400 w-24 truncate">{p.pokemon_name}</span>
                 <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full ${used > 508 ? 'bg-red-500' : 'bg-green-500'}`}
-                    style={{ width: `${Math.min(100, (used / 508) * 100)}%` }}
+                    className={`h-full rounded-full ${used > 510 ? 'bg-red-500' : 'bg-green-500'}`}
+                    style={{ width: `${Math.min(100, (used / 510) * 100)}%` }}
                   />
                 </div>
-                <span className={`text-xs w-12 text-right ${used > 508 ? 'text-red-400' : 'text-gray-400'}`}>{used}/508</span>
+                <span className={`text-xs w-12 text-right ${used > 510 ? 'text-red-400' : 'text-gray-400'}`}>{used}/510</span>
               </div>
             );
           })}
