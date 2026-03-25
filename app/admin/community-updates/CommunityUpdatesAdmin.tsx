@@ -83,10 +83,12 @@ export default function CommunityUpdatesAdmin({
   initialEdits,
   onApply,
   onReject,
+  onDelete,
 }: {
   initialEdits: AdminEdit[];
   onApply:      (editId: string, editContent: string, pageSlug: string) => Promise<void>;
   onReject:     (editId: string) => Promise<void>;
+  onDelete:     (editId: string) => Promise<void>;
 }) {
   const [edits,        setEdits]        = useState<AdminEdit[]>(initialEdits);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -162,6 +164,19 @@ export default function CommunityUpdatesAdmin({
       await onReject(edit.id);
       setEdits(prev => prev.map(e => e.id === edit.id ? { ...e, status: 'rejected' } : e));
       showToast(`Rejected "${edit.title}".`);
+    } catch (err: unknown) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+    setBusy(null);
+  }
+
+  async function handleDelete(edit: AdminEdit) {
+    if (!window.confirm(`Are you sure you want to delete "${edit.title}"?`)) return;
+    setBusy(edit.id);
+    try {
+      await onDelete(edit.id);
+      setEdits(prev => prev.filter(e => e.id !== edit.id));
+      showToast(`Deleted "${edit.title}".`);
     } catch (err: unknown) {
       showToast(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
@@ -322,6 +337,14 @@ export default function CommunityUpdatesAdmin({
                             Reject
                           </button>
                         )}
+                        <button
+                          onClick={() => handleDelete(edit)}
+                          disabled={busy === edit.id}
+                          className="text-xs text-gray-500 hover:text-red-400 disabled:opacity-50 transition-colors"
+                          title="Delete permanently"
+                        >
+                          🗑️
+                        </button>
                       </div>
                     </td>
                   </tr>

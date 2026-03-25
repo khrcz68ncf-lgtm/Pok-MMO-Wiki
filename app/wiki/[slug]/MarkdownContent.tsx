@@ -1,20 +1,44 @@
 'use client';
 
+import React from 'react';
 import ReactMarkdown from 'react-markdown';
+
+// Extract {#anchor-id} from heading text, return clean display + id attribute.
+// Handles both string children and array children from react-markdown.
+function parseAnchorId(children: React.ReactNode): { id?: string; display: React.ReactNode } {
+  if (typeof children === 'string') {
+    const m = children.match(/^(.*?)\s*\{#([\w-]+)\}\s*$/);
+    if (m) return { id: m[2], display: m[1] };
+    return { display: children };
+  }
+  if (Array.isArray(children)) {
+    const arr = children as React.ReactNode[];
+    const last = arr[arr.length - 1];
+    if (typeof last === 'string') {
+      const m = last.match(/^(.*?)\s*\{#([\w-]+)\}\s*$/);
+      if (m) return { id: m[2], display: [...arr.slice(0, -1), m[1]] };
+    }
+    return { display: children };
+  }
+  return { display: children };
+}
 
 export default function MarkdownContent({ content }: { content: string }) {
   return (
     <ReactMarkdown
       components={{
-        h1: ({ children }) => (
-          <h1 className="text-3xl font-bold mt-8 mb-4 text-white">{children}</h1>
-        ),
-        h2: ({ children }) => (
-          <h2 className="text-2xl font-semibold mt-6 mb-3 text-white">{children}</h2>
-        ),
-        h3: ({ children }) => (
-          <h3 className="text-xl font-semibold mt-5 mb-2 text-gray-100">{children}</h3>
-        ),
+        h1: ({ children }) => {
+          const { id, display } = parseAnchorId(children);
+          return <h1 id={id} className="text-3xl font-bold mt-8 mb-4 text-white">{display}</h1>;
+        },
+        h2: ({ children }) => {
+          const { id, display } = parseAnchorId(children);
+          return <h2 id={id} className="text-2xl font-semibold mt-6 mb-3 text-white">{display}</h2>;
+        },
+        h3: ({ children }) => {
+          const { id, display } = parseAnchorId(children);
+          return <h3 id={id} className="text-xl font-semibold mt-5 mb-2 text-gray-100">{display}</h3>;
+        },
         p: ({ children }) => (
           <p className="mb-4 text-gray-300 leading-relaxed">{children}</p>
         ),

@@ -7,6 +7,7 @@ import PokemonTemplate from './PokemonTemplate';
 import MoveTemplate from './MoveTemplate';
 import ItemTemplate from './ItemTemplate';
 import AbilityTemplate from './AbilityTemplate';
+import EliteFourTemplate from './EliteFourTemplate';
 import Navbar from '@/app/components/Navbar';
 import Breadcrumb from '@/app/components/Breadcrumb';
 import CommunityUpdates from './CommunityUpdates';
@@ -80,10 +81,11 @@ export default async function WikiPage({
     year: 'numeric', month: 'long', day: 'numeric',
   });
 
-  const isPokemon = page.template_type === 'pokemon';
-  const isMove    = page.template_type === 'move';
-  const isItem    = page.template_type === 'item';
-  const isAbility = page.template_type === 'ability';
+  const isPokemon   = page.template_type === 'pokemon';
+  const isMove      = page.template_type === 'move';
+  const isItem      = page.template_type === 'item';
+  const isAbility   = page.template_type === 'ability';
+  const isEliteFour = slug === 'elite-four';
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let pageData: any = page;
@@ -266,6 +268,12 @@ export default async function WikiPage({
           // ── Ability template ──────────────────────────────────────────────
           <>
             <AbilityTemplate page={pageData} pokemonMap={abilityPokemonMap} />
+            <CommunityUpdates pageSlug={slug} pageTitle={page.title} />
+          </>
+        ) : isEliteFour ? (
+          // ── Elite Four hub ────────────────────────────────────────────────
+          <>
+            <EliteFourTemplate />
             <CommunityUpdates pageSlug={slug} pageTitle={page.title} />
           </>
         ) : (

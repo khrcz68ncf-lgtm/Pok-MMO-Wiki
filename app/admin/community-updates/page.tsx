@@ -39,6 +39,11 @@ async function rejectEditAction(editId: string) {
     .eq('id', editId);
 }
 
+async function deleteEditAction(editId: string) {
+  'use server';
+  await supabase.from('community_edits').delete().eq('id', editId);
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function CommunityUpdatesAdminPage() {
@@ -88,6 +93,7 @@ export default async function CommunityUpdatesAdminPage() {
           initialEdits={edits}
           onApply={applyEditAction}
           onReject={rejectEditAction}
+          onDelete={deleteEditAction}
         />
       </div>
     </div>

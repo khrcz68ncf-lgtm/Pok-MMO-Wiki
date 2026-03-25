@@ -172,6 +172,7 @@ function EditCard({
   onVote,
   onApply,
   onReject,
+  onDelete,
 }: {
   edit:     CEdit;
   userId:   string | null;
@@ -179,6 +180,7 @@ function EditCard({
   onVote:   (editId: string, voteType: 'up' | 'down') => void;
   onApply:  (edit: CEdit) => Promise<void>;
   onReject: (editId: string) => Promise<void>;
+  onDelete: (editId: string) => Promise<void>;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [viewed,   setViewed]   = useState(false);
@@ -286,20 +288,34 @@ function EditCard({
           </div>
 
           {/* Admin actions */}
-          {isAdmin && edit.status !== 'approved' && (
+          {isAdmin && (
             <div className="flex gap-2">
+              {edit.status !== 'approved' && (
+                <button
+                  onClick={handleApply}
+                  disabled={applying}
+                  className="text-xs px-3 py-1 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20 disabled:opacity-50 transition-colors"
+                >
+                  {applying ? '…' : '✓ Apply'}
+                </button>
+              )}
+              {edit.status !== 'rejected' && (
+                <button
+                  onClick={() => onReject(edit.id)}
+                  className="text-xs px-3 py-1 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-colors"
+                >
+                  ✕ Reject
+                </button>
+              )}
               <button
-                onClick={handleApply}
-                disabled={applying}
-                className="text-xs px-3 py-1 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20 disabled:opacity-50 transition-colors"
+                onClick={async () => {
+                  if (window.confirm('Are you sure you want to delete this edit?')) {
+                    await onDelete(edit.id);
+                  }
+                }}
+                className="text-xs px-3 py-1 rounded-lg bg-gray-700/50 border border-gray-700 text-gray-400 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-colors"
               >
-                {applying ? '…' : '✓ Apply'}
-              </button>
-              <button
-                onClick={() => onReject(edit.id)}
-                className="text-xs px-3 py-1 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-colors"
-              >
-                ✕ Reject
+                🗑️
               </button>
             </div>
           )}
@@ -487,6 +503,19 @@ export default function CommunityUpdates({
     showToast('Edit rejected.');
   }
 
+  // ── Admin: Delete ──────────────────────────────────────────────────────────
+
+  async function handleDelete(editId: string) {
+    setEdits(prev => prev.filter(e => e.id !== editId));
+    const { error } = await supabase.from('community_edits').delete().eq('id', editId);
+    if (error) {
+      showToast('Delete failed: ' + error.message);
+      fetchEdits(); // re-fetch to restore if delete failed
+    } else {
+      showToast('Edit deleted.');
+    }
+  }
+
   // ── Toast ──────────────────────────────────────────────────────────────────
 
   function showToast(msg: string) {
@@ -588,6 +617,7 @@ export default function CommunityUpdates({
                 onVote={handleVote}
                 onApply={handleApply}
                 onReject={handleReject}
+                onDelete={handleDelete}
               />
             ))}
           </div>

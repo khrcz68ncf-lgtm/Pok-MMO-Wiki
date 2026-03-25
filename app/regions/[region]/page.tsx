@@ -36,6 +36,7 @@ type Gym = {
 type E4Member = {
   name:    string;
   type:    string;
+  slug?:   string;
   sprite?: string;
 };
 
@@ -115,12 +116,12 @@ const REGIONS: Record<string, RegionData> = {
       { leader: 'Giovanni',  city: 'Viridian City',   type: 'ground',   badge: 'Earth Badge',   levelCap: 55, sprite: 'https://images.shoutwiki.com/pokemmo/f/f2/Giovanni.png'        },
     ],
     eliteFour: [
-      { name: 'Lorelei', type: 'ice',      sprite: 'https://images.shoutwiki.com/pokemmo/d/db/Spr_FRLG_Lorelei.png' },
-      { name: 'Bruno',   type: 'fighting', sprite: 'https://images.shoutwiki.com/pokemmo/f/f7/Spr_FRLG_Bruno.png'   },
-      { name: 'Agatha',  type: 'ghost',    sprite: 'https://images.shoutwiki.com/pokemmo/5/56/Spr_FRLG_Agatha.png'  },
-      { name: 'Lance',   type: 'dragon',   sprite: 'https://images.shoutwiki.com/pokemmo/f/fb/Spr_FRLG_Lance.png'   },
+      { name: 'Lorelei', type: 'ice',      slug: 'lorelei',     sprite: 'https://images.shoutwiki.com/pokemmo/d/db/Spr_FRLG_Lorelei.png' },
+      { name: 'Bruno',   type: 'fighting', slug: 'bruno-kanto', sprite: 'https://images.shoutwiki.com/pokemmo/f/f7/Spr_FRLG_Bruno.png'   },
+      { name: 'Agatha',  type: 'ghost',    slug: 'agatha',      sprite: 'https://images.shoutwiki.com/pokemmo/5/56/Spr_FRLG_Agatha.png'  },
+      { name: 'Lance',   type: 'dragon',   slug: 'lance-kanto', sprite: 'https://images.shoutwiki.com/pokemmo/f/fb/Spr_FRLG_Lance.png'   },
     ],
-    champion: { name: 'Blue', type: 'normal', sprite: 'https://images.shoutwiki.com/pokemmo/e/e2/Spr_FRLG_Blue_2.png' },
+    champion: { name: 'Blue', type: 'normal', slug: 'blue', sprite: 'https://images.shoutwiki.com/pokemmo/e/e2/Spr_FRLG_Blue_2.png' },
     cities: [
       { name: 'Pallet Town',     slug: 'pallet-town',     image: 'https://images.shoutwiki.com/pokemmo/thumb/6/6b/Pallet_Town.png/240px-Pallet_Town.png'                },
       { name: 'Viridian City',   slug: 'viridian-city',   image: 'https://images.shoutwiki.com/pokemmo/thumb/9/9f/Viridian_City.png/240px-Viridian_City.png'             },
@@ -180,12 +181,12 @@ const REGIONS: Record<string, RegionData> = {
       { leader: 'Clair',   city: 'Blackthorn City', type: 'dragon',   badge: 'Rising Badge',  levelCap: 48, sprite: 'https://images.shoutwiki.com/pokemmo/d/d7/Spr_HGSS_Clair.png'   },
     ],
     eliteFour: [
-      { name: 'Will',  type: 'psychic',  sprite: 'https://images.shoutwiki.com/pokemmo/3/3d/Spr_Johto_Will.png'  },
-      { name: 'Koga',  type: 'poison',   sprite: 'https://images.shoutwiki.com/pokemmo/d/d9/Spr_Johto_Koga.png'  },
-      { name: 'Bruno', type: 'fighting', sprite: 'https://images.shoutwiki.com/pokemmo/6/6d/Spr_Johto_Bruno.png' },
-      { name: 'Karen', type: 'dark',     sprite: 'https://images.shoutwiki.com/pokemmo/f/f9/Spr_Johto_Karen.png' },
+      { name: 'Will',  type: 'psychic',  slug: 'will',        sprite: 'https://images.shoutwiki.com/pokemmo/3/3d/Spr_Johto_Will.png'  },
+      { name: 'Koga',  type: 'poison',   slug: 'koga-johto',  sprite: 'https://images.shoutwiki.com/pokemmo/d/d9/Spr_Johto_Koga.png'  },
+      { name: 'Bruno', type: 'fighting', slug: 'bruno-johto', sprite: 'https://images.shoutwiki.com/pokemmo/6/6d/Spr_Johto_Bruno.png' },
+      { name: 'Karen', type: 'dark',     slug: 'karen',       sprite: 'https://images.shoutwiki.com/pokemmo/f/f9/Spr_Johto_Karen.png' },
     ],
-    champion: { name: 'Lance', type: 'dragon', sprite: 'https://images.shoutwiki.com/pokemmo/d/d9/Spr_Johto_Lance.png' },
+    champion: { name: 'Lance', type: 'dragon', slug: 'lance-johto', sprite: 'https://images.shoutwiki.com/pokemmo/d/d9/Spr_Johto_Lance.png' },
     cities: [
       { name: 'New Bark Town',    slug: 'new-bark-town',    image: 'https://images.shoutwiki.com/pokemmo/thumb/f/f6/New_Bark_Town.png/200px-New_Bark_Town.png'       },
       { name: 'Cherrygrove City', slug: 'cherrygrove-city', image: 'https://images.shoutwiki.com/pokemmo/thumb/3/3f/Cherrygrove_City.png/200px-Cherrygrove_City.png' },
@@ -249,12 +250,12 @@ const REGIONS: Record<string, RegionData> = {
       { leader: 'Juan',        city: 'Sootopolis City', type: 'water',    badge: 'Rain Badge',    levelCap: 58, sprite: 'https://images.shoutwiki.com/pokemmo/1/16/Spr_E_Juan.png'              },
     ],
     eliteFour: [
-      { name: 'Sidney', type: 'dark',   sprite: 'https://images.shoutwiki.com/pokemmo/8/86/Spr_RS_Sidney.png' },
-      { name: 'Phoebe', type: 'ghost',  sprite: 'https://images.shoutwiki.com/pokemmo/e/e6/Spr_RS_Phoebe.png' },
-      { name: 'Glacia', type: 'ice',    sprite: 'https://images.shoutwiki.com/pokemmo/7/71/Spr_RS_Glacia.png' },
-      { name: 'Drake',  type: 'dragon', sprite: 'https://images.shoutwiki.com/pokemmo/0/04/Spr_RS_Drake.png'  },
+      { name: 'Sidney', type: 'dark',   slug: 'sidney',  sprite: 'https://images.shoutwiki.com/pokemmo/8/86/Spr_RS_Sidney.png' },
+      { name: 'Phoebe', type: 'ghost',  slug: 'phoebe',  sprite: 'https://images.shoutwiki.com/pokemmo/e/e6/Spr_RS_Phoebe.png' },
+      { name: 'Glacia', type: 'ice',    slug: 'glacia',  sprite: 'https://images.shoutwiki.com/pokemmo/7/71/Spr_RS_Glacia.png' },
+      { name: 'Drake',  type: 'dragon', slug: 'drake',   sprite: 'https://images.shoutwiki.com/pokemmo/0/04/Spr_RS_Drake.png'  },
     ],
-    champion: { name: 'Wallace', type: 'water', sprite: 'https://images.shoutwiki.com/pokemmo/c/cc/Spr_E_Wallace.png' },
+    champion: { name: 'Wallace', type: 'water', slug: 'wallace', sprite: 'https://images.shoutwiki.com/pokemmo/c/cc/Spr_E_Wallace.png' },
     cities: [
       { name: 'Littleroot Town',  slug: 'littleroot-town',  image: 'https://images.shoutwiki.com/pokemmo/thumb/f/f0/Littleroot_Town.png/240px-Littleroot_Town.png'                             },
       { name: 'Oldale Town',      slug: 'oldale-town',      image: 'https://images.shoutwiki.com/pokemmo/thumb/f/f0/Oldale_Town_E.png/240px-Oldale_Town_E.png'                                 },
@@ -321,12 +322,12 @@ const REGIONS: Record<string, RegionData> = {
       { leader: 'Volkner',      city: 'Sunyshore City', type: 'electric', badge: 'Beacon Badge', levelCap: 60, sprite: 'https://images.shoutwiki.com/pokemmo/8/8a/Spr_Pt_Volkner.png'       },
     ],
     eliteFour: [
-      { name: 'Aaron',  type: 'bug',     sprite: 'https://images.shoutwiki.com/pokemmo/1/1a/Spr_DP_Aaron.png'  },
-      { name: 'Bertha', type: 'ground',  sprite: 'https://images.shoutwiki.com/pokemmo/f/f7/Spr_DP_Bertha.png' },
-      { name: 'Flint',  type: 'fire',    sprite: 'https://images.shoutwiki.com/pokemmo/c/cb/Spr_DP_Flint.png'  },
-      { name: 'Lucian', type: 'psychic', sprite: 'https://images.shoutwiki.com/pokemmo/7/74/Spr_DP_Lucian.png' },
+      { name: 'Aaron',  type: 'bug',     slug: 'aaron',   sprite: 'https://images.shoutwiki.com/pokemmo/1/1a/Spr_DP_Aaron.png'  },
+      { name: 'Bertha', type: 'ground',  slug: 'bertha',  sprite: 'https://images.shoutwiki.com/pokemmo/f/f7/Spr_DP_Bertha.png' },
+      { name: 'Flint',  type: 'fire',    slug: 'flint',   sprite: 'https://images.shoutwiki.com/pokemmo/c/cb/Spr_DP_Flint.png'  },
+      { name: 'Lucian', type: 'psychic', slug: 'lucian',  sprite: 'https://images.shoutwiki.com/pokemmo/7/74/Spr_DP_Lucian.png' },
     ],
-    champion: { name: 'Cynthia', type: 'dragon', sprite: 'https://images.shoutwiki.com/pokemmo/2/2f/Spr_DP_Cynthia.png' },
+    champion: { name: 'Cynthia', type: 'dragon', slug: 'cynthia', sprite: 'https://images.shoutwiki.com/pokemmo/2/2f/Spr_DP_Cynthia.png' },
     cities: [
       { name: 'Twinleaf Town',    slug: 'twinleaf-town',         image: 'https://images.shoutwiki.com/pokemmo/thumb/3/3b/Twinleaf_Town.png/200px-Twinleaf_Town.png'                                                   },
       { name: 'Sandgem Town',     slug: 'sandgem-town',          image: 'https://images.shoutwiki.com/pokemmo/thumb/c/cb/Sandgem_Town.png/200px-Sandgem_Town.png'                                                     },
@@ -394,12 +395,12 @@ const REGIONS: Record<string, RegionData> = {
       { gymNumber: 8, leader: 'Iris',    city: 'Opelucid City',  type: 'dragon',   badge: 'Legend Badge', levelCap: 56, sprite: 'https://images.shoutwiki.com/pokemmo/f/f8/Spr_BW_Iris.png'    },
     ],
     eliteFour: [
-      { name: 'Shauntal', type: 'ghost',    sprite: 'https://images.shoutwiki.com/pokemmo/2/28/Spr_BW_Shauntal.png' },
-      { name: 'Marshal',  type: 'fighting', sprite: 'https://images.shoutwiki.com/pokemmo/2/2e/Spr_BW_Marshal.png'  },
-      { name: 'Grimsley', type: 'dark',     sprite: 'https://images.shoutwiki.com/pokemmo/b/bf/Spr_BW_Grimsley.png' },
-      { name: 'Caitlin',  type: 'psychic',  sprite: 'https://images.shoutwiki.com/pokemmo/8/86/Spr_BW_Caitlin.png'  },
+      { name: 'Shauntal', type: 'ghost',    slug: 'shauntal', sprite: 'https://images.shoutwiki.com/pokemmo/2/28/Spr_BW_Shauntal.png' },
+      { name: 'Marshal',  type: 'fighting', slug: 'marshal',  sprite: 'https://images.shoutwiki.com/pokemmo/2/2e/Spr_BW_Marshal.png'  },
+      { name: 'Grimsley', type: 'dark',     slug: 'grimsley', sprite: 'https://images.shoutwiki.com/pokemmo/b/bf/Spr_BW_Grimsley.png' },
+      { name: 'Caitlin',  type: 'psychic',  slug: 'caitlin',  sprite: 'https://images.shoutwiki.com/pokemmo/8/86/Spr_BW_Caitlin.png'  },
     ],
-    champion: { name: 'Alder', type: 'bug', sprite: 'https://images.shoutwiki.com/pokemmo/3/3f/Spr_BW_Alder.png' },
+    champion: { name: 'Alder', type: 'bug', slug: 'alder', sprite: 'https://images.shoutwiki.com/pokemmo/3/3f/Spr_BW_Alder.png' },
     cities: [
       { name: 'Nuvema Town',          slug: 'nuvema-town',         image: 'https://images.shoutwiki.com/pokemmo/thumb/b/bf/Nuvema_Town.png/200px-Nuvema_Town.png'                                               },
       { name: 'Accumula Town',        slug: 'accumula-town',       image: 'https://images.shoutwiki.com/pokemmo/thumb/8/84/Accumula_Town_Autumn_BW.png/200px-Accumula_Town_Autumn_BW.png'                     },
@@ -639,22 +640,43 @@ export default async function RegionPage({
         <section>
           <SectionHeading>Elite Four &amp; Champion</SectionHeading>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-            {eliteFour.map((member, i) => (
+            {eliteFour.map((member, i) => {
+              const card = (
+                <TrainerCard
+                  member={member}
+                  label={`Elite Four #${i + 1}`}
+                  accentText={accentText}
+                />
+              );
+              return member.slug ? (
+                <Link key={member.name} href={`/wiki/${member.slug}`} className="hover:opacity-90 transition-opacity">
+                  {card}
+                </Link>
+              ) : (
+                <div key={member.name}>{card}</div>
+              );
+            })}
+            {champion.slug ? (
+              <Link href={`/wiki/${champion.slug}`} className="hover:opacity-90 transition-opacity">
+                <TrainerCard
+                  member={champion}
+                  label="Champion"
+                  accentText={accentText}
+                  accentBg={accentBg}
+                  accentBorder={accentBorder}
+                  isChampion
+                />
+              </Link>
+            ) : (
               <TrainerCard
-                key={member.name}
-                member={member}
-                label={`Elite Four #${i + 1}`}
+                member={champion}
+                label="Champion"
                 accentText={accentText}
+                accentBg={accentBg}
+                accentBorder={accentBorder}
+                isChampion
               />
-            ))}
-            <TrainerCard
-              member={champion}
-              label="Champion"
-              accentText={accentText}
-              accentBg={accentBg}
-              accentBorder={accentBorder}
-              isChampion
-            />
+            )}
           </div>
         </section>
 
