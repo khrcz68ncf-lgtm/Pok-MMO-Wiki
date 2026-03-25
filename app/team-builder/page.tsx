@@ -118,6 +118,28 @@ export default function TeamBuilderPage() {
       .select('*')
       .order('updated_at', { ascending: false });
     setTeams(data ?? []);
+
+    // Batch-load pokemon for ALL teams in one query so sidebar sprites are populated immediately
+    if (data && data.length > 0) {
+      const teamIds = data.map(t => t.id);
+      const { data: allPokemon } = await supabase
+        .from('team_pokemon')
+        .select('*')
+        .in('team_id', teamIds)
+        .order('slot');
+
+      if (allPokemon) {
+        const newMap: Record<string, TeamPokemon[]> = {};
+        for (const team of data) {
+          const slots = allPokemon.filter(p => p.team_id === team.id);
+          newMap[team.id] = Array.from({ length: 6 }, (_, i) =>
+            slots.find(p => p.slot === i + 1) ?? emptySlot(team.id, i + 1)
+          );
+        }
+        setPokemonByTeam(newMap);
+      }
+    }
+
     setLoading(false);
   }, []);
 
@@ -501,20 +523,15 @@ export default function TeamBuilderPage() {
                 {/* Mini sprite row */}
                 <div className="flex gap-1 mt-2">
                   {Array.from({ length: 6 }, (_, i) => {
-                    if (activeTeamId !== team.id) return (
-                      <div key={i} className="w-6 h-6 rounded-full bg-gray-800 border border-gray-700" />
-                    );
-                    const p = teamPokemon[i];
+                    const p = pokemonByTeam[team.id]?.[i];
                     if (!p?.pokemon_id) return (
                       <div key={i} className="w-6 h-6 rounded-full bg-gray-800 border border-dashed border-gray-700" />
                     );
+                    const base = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated`;
+                    const src  = p.is_shiny ? `${base}/shiny/${p.pokemon_id}.gif` : `${base}/${p.pokemon_id}.gif`;
                     return (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img key={i}
-                        src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.pokemon_id}.png`}
-                        alt={p.pokemon_name ?? ''}
-                        className="w-6 h-6 object-contain"
-                      />
+                      <img key={i} src={src} alt={p.pokemon_name ?? ''} className="w-6 h-6 object-contain" />
                     );
                   })}
                 </div>
