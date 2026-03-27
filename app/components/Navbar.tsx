@@ -138,6 +138,7 @@ const navLinks = [
   { label: 'Home',      href: '/'                   },
   { label: 'Wiki',      href: '/wiki'               },
   { label: 'Guides',    href: '/guides'             },
+  { label: '✨ Shinies', href: '/shinies'            },
   { label: 'Dmg Calc',  href: '/damage-calculator'   },
   { label: 'Breeding',  href: '/breeding-calculator' },
   { label: 'Community', href: '/community'           },

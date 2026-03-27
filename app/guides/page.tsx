@@ -49,9 +49,9 @@ const sections: GuideSection[] = [
   {
     title: 'EV Training',
     cards: [
-      { title: 'EV Spots',     href: '/wiki/ev-spots',     desc: 'Coming soon' },
-      { title: 'EV Items',     href: '/wiki/ev-items',     desc: 'Coming soon' },
-      { title: 'EV Resetting', href: '/wiki/ev-resetting', desc: 'Coming soon' },
+      { title: 'EV Training Guide', href: '/wiki/ev-training',  desc: 'Best horde spots for all 6 stats, EXP spots & reduction berries' },
+      { title: 'EV Items',          href: '/wiki/ev-items',     desc: 'Coming soon' },
+      { title: 'EV Resetting',      href: '/wiki/ev-resetting', desc: 'Coming soon' },
     ],
   },
 ];

@@ -47,8 +47,10 @@ const CATEGORIES: CategoryDef[] = [
     glow: 'bg-blue-500/10',
     accentText: 'text-blue-400',
     subcategories: [
-      'Adventure', 'Vitamins', 'Berries', 'Seeds',
+      'Adventure', 'Vitamins', 'Seeds',
       'Battle', 'Crafting', 'Gift Shop',
+      { label: 'Berries', href: '/wiki/berries' },
+      { label: 'Browse All Items', href: '/wiki?type=item' },
     ],
   },
   {

@@ -14,6 +14,7 @@ const categories = [
   { name: 'Damage Calc',    icon: '💥', href: '/damage-calculator',   desc: 'Calculate damage with the Gen 5 formula',              gradient: 'from-rose-950/60 to-gray-900',   glow: 'bg-rose-500/10',   accent: 'text-rose-400'   },
   { name: 'Breeding Calc', icon: '🥚', href: '/breeding-calculator', desc: 'Calculate IV breeding costs and chains for PokéMMO',   gradient: 'from-lime-950/60 to-gray-900',   glow: 'bg-lime-500/10',   accent: 'text-lime-400'   },
   { name: 'Berries',       icon: '🫐', href: '/berries',             desc: 'Berry guide, yields, seeds and harvest calculator',    gradient: 'from-fuchsia-950/60 to-gray-900', glow: 'bg-fuchsia-500/10', accent: 'text-fuchsia-400' },
+  { name: 'Shiny HoF',       icon: '✨', href: '/shinies',             desc: 'Community shiny hall of fame — submit yours!',        gradient: 'from-yellow-950/60 to-gray-900', glow: 'bg-yellow-500/10', accent: 'text-yellow-400' },
   { name: 'Swarms',          icon: '🔥', href: '/swarms',              desc: 'Daily swarm locations and Pokémon',                   gradient: 'from-red-950/60 to-gray-900',    glow: 'bg-red-500/10',    accent: 'text-red-400'    },
   { name: 'NPCs',            icon: '👤', href: '/npcs',                desc: 'NPC trainers, their teams and locations',             gradient: 'from-violet-950/60 to-gray-900', glow: 'bg-violet-500/10', accent: 'text-violet-400' },
 ];
